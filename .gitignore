@@ -3,6 +3,5 @@ node_modules
 test_api.txt
 init_node.md
 todo.txt
-package-lock.json
-package.json
 node_modules
+views

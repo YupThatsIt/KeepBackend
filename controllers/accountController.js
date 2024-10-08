@@ -83,6 +83,7 @@ const viewAccount = async (req, res) => {
     try {
         const userID = mongoose.Types.ObjectId.createFromHexString(req.userID);
         const foundAccount = await Account.findOne({ "userID": userID});
+        if (!foundAccount) return res.status(403).send("No account found");
         const returnData = {
             "firstName": foundAccount.firstName,
             "lastName": foundAccount.lastName,

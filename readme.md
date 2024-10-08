@@ -4,18 +4,11 @@
 - Install nodemon for dev `npm install nodemon --save-dev`
 - Install express for api `npm install express`
 - Install mongoose for orm `npm install mongoose`
-- Install morgan for sending status to terminal  `npm install morgan`
+- Install morgan for sending status to terminal `npm install morgan`
 - Install jsonwebtoken for JWT authentication `npm install jsonwebtoken`
-- Install bcrypt for password encryption/decryption `npm install bcrypt`
-- Install cookie-parser for cookie parsing `npm install cookie-parser`
-- Install dotenv `npm install dotenv`
-
-- if experiencing `command is not recognized in terminal for node` or something along the line. Please use `npm install -g` instead of normal install
-
-**MONGODB INSTALLATION : WINDOWS**
-
-- https://www.mongodb.com/docs/manual/installation/
-- run services.msc and check if MongoDB server service is running
+- Install bcrypt for password encryption/decryption `npm install bcryptjs`
+- Install imgur for online images hosting `npm install imgur`
+- Install express-upload for uploading images to backend `npm install express-upload`
 
 **FOR FRONTEND TEAM**
 
