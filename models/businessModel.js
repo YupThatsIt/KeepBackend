@@ -23,6 +23,55 @@ const businessSchema = mongoose.Schema({
         required: true,
         unique: true
     },
+    admin: {
+        name: {
+            type: String,
+            required: true
+        },
+        imgUrl: {
+            type: String,
+            required: true
+        },
+        id: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true
+        }
+    },
+    accountants: [
+        {
+            name: {
+                type: String,
+                required: true
+            },
+            imgUrl: {
+                type: String,
+                required: true
+            },
+            id: {
+                type: mongoose.Schema.Types.ObjectId,
+                required: true
+            }
+        }
+    ],
+    viewers: [
+        {
+            name: {
+                type: String,
+                required: true
+            },
+            imgUrl: {
+                type: String,
+                required: true
+            },
+            id: {
+                type: mongoose.Schema.Types.ObjectId,
+                required: true
+            }
+        }
+    ],
+    joiningCode: {
+        type: String
+    },
     logoUrl: {
         type: String
     }

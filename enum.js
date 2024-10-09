@@ -72,9 +72,9 @@ const FinancialChannelProviderType = {
 // Contactor Related //
 ///////////////////////
 
-const ContactorType = {
+const ContactType = {
     CLIENT: 0,
     SUPPLIER: 1
 };
 
-module.exports = { NameTitle, BusinessRole, DocumentStatus, ItemType, TransactionStatus, TransactionType, BankAccountType, FinancialChannelProviderType, ContactorType };
+module.exports = { NameTitle, BusinessRole, DocumentStatus, ItemType, TransactionStatus, TransactionType, BankAccountType, FinancialChannelProviderType, ContactType };
