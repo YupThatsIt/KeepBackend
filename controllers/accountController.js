@@ -30,6 +30,7 @@ const registerUser = async (req, res) => {
             "email": email,
             "username": user,
             "password": hashPwd,
+            "businessRoles": [],
             "refreshtoken": ""
         });
         if (!newUser) return res.status(500);
