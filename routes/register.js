@@ -48,7 +48,7 @@ Input ->    {
                 "imgData": { something }
             }
 
-Outputs ->  Status 200 "User registered"
+Outputs ->  Status 200  return { accessToken : String}
             Status 400 "Input is incomplete"
             Status 400 "Invalid title"
             Status 400 "Invalid firstname"

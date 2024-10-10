@@ -2,6 +2,8 @@ const { User, Account } = require("../models/userModel");
 const { validateEmail, validateNameEN, validateName, validatePhone }= require("../utils/stringValidation");
 
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 const registrationValidate = async (req, res) => {
     try {
@@ -76,7 +78,26 @@ const registerUser = async (req, res) => {
         if (!newAccount) return res.status(500).send("Cannot create new Account mongoDb document");
         await newAccount.save();
 
-        return res.status(200).send("User registered");
+        // generate authentication tokens
+        const accessToken = jwt.sign(
+            { "userID": newUser._id },
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: '30m' }
+        );
+        const refreshToken = jwt.sign(
+            { "userID": newUser._id },
+            process.env.REFRESH_TOKEN_SECRET,
+            { expiresIn: '1d' }
+        );
+        newUser.refreshtoken = refreshToken;
+        await newUser.save();
+
+        res.cookie("jwt", refreshToken, {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000
+        });
+
+        return res.status(200).json({ accessToken });
     }
     catch(err) {
         return res.status(500).send("Error in registration controller" + err);
