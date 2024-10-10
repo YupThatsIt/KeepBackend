@@ -4,12 +4,16 @@ const validateEmail = (email) => {
     );
 };
 
-const validateName = (name) => {
+const validateNameEN = (name) => {
   return String(name).toLowerCase().match(/^[a-zA-Z]+$/);
+};
+
+const validateName = (name) => {
+  return String(name).toLowerCase().match(/^[a-zA-Zก-ฮ]+$/);
 };
 
 const validatePhone = (phone) => {
   return String(phone).match(/^\d{10}$/);
 };
 
-module.exports = { validateEmail, validatePhone, validateName } ;
+module.exports = { validateEmail, validatePhone, validateName, validateNameEN } ;
