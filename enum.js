@@ -5,7 +5,8 @@
 const NameTitle = {
     MALE: 0,
     FEMALE: 1,
-    SINGLE_FEMALE: 2
+    SINGLE_FEMALE: 2,
+    NOT_SPECIFIED: 3
 };
 
 const BusinessRole = {

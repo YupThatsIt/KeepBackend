@@ -1,9 +1,9 @@
-// StakeHolder related models -> Done
+// Contact related models -> Done
 
 const mongoose = require("mongoose");
-const { ContactType } = require("../enum");
+const { ContactType, NameTitle } = require("../enum");
 
-// Item schema
+// Contact schema
 const contactSchema = new mongoose.Schema({
     businessID: {
         type: mongoose.Schema.Types.ObjectId,
@@ -17,7 +17,21 @@ const contactSchema = new mongoose.Schema({
         ],
         required: true
     },
-    contactName: {
+    contactTitle: {
+        type: Number,
+        enum: [ 
+            NameTitle.MALE, 
+            NameTitle.FEMALE,
+            NameTitle.SINGLE_FEMALE,
+            NameTitle.NOT_SPECIFIED
+        ],
+        required: true
+    },
+    contactFirstName: {
+        type: String,
+        required: true
+    },
+    contactLastName: {
         type: String,
         required: true
     },
@@ -33,11 +47,11 @@ const contactSchema = new mongoose.Schema({
     },
     address: {
         type: String,
+        required: true
     },
     taxID: {
         type: String,
         required: true,
-        unique: true
     },
     imgUrl: {
         type: String
