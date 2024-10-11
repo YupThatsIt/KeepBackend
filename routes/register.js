@@ -2,8 +2,6 @@ const express = require("express");
 const router = express.Router();
 const { registerUser, registrationValidate } = require("../controllers/registrationController");
 
-// Current Endpoints
-
 /* 
 --------------------------------------------
 POST /user/registration-validation

@@ -24,14 +24,6 @@ const businessSchema = mongoose.Schema({
         unique: true
     },
     admin: {
-        name: {
-            type: String,
-            required: true
-        },
-        imgUrl: {
-            type: String,
-            required: true
-        },
         id: {
             type: mongoose.Schema.Types.ObjectId,
             required: true
@@ -39,14 +31,7 @@ const businessSchema = mongoose.Schema({
     },
     accountants: [
         {
-            name: {
-                type: String,
-                required: true
-            },
-            imgUrl: {
-                type: String,
-                required: true
-            },
+            _id: false,
             id: {
                 type: mongoose.Schema.Types.ObjectId,
                 required: true
@@ -55,14 +40,7 @@ const businessSchema = mongoose.Schema({
     ],
     viewers: [
         {
-            name: {
-                type: String,
-                required: true
-            },
-            imgUrl: {
-                type: String,
-                required: true
-            },
+            _id: false,
             id: {
                 type: mongoose.Schema.Types.ObjectId,
                 required: true

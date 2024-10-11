@@ -4,6 +4,10 @@ const validateEmail = (email) => {
     );
 };
 
+const validateTaxID = (name) => {
+  return String(name).match(/^\d{13}$/);
+};
+
 const validateNameEN = (name) => {
   return String(name).toLowerCase().match(/^[a-zA-Z]+$/);
 };
@@ -16,4 +20,4 @@ const validatePhone = (phone) => {
   return String(phone).match(/^\d{10}$/);
 };
 
-module.exports = { validateEmail, validatePhone, validateName, validateNameEN } ;
+module.exports = { validateEmail, validatePhone, validateName, validateNameEN, validateTaxID } ;

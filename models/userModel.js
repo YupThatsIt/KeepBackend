@@ -21,8 +21,9 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     businessRoles: [{
+        _id: false,
         businessID: {
-            type: String // change the datatype according to business id datatype
+            type: mongoose.Schema.Types.ObjectId
         }, 
         role: {
             type: Number,
@@ -33,7 +34,7 @@ const userSchema = new mongoose.Schema({
             ]
         }
     }],
-    refreshtoken: {
+    refreshToken: {
         type: String
     }
 }, { timestamps: true });
@@ -49,7 +50,8 @@ const userAccountSchema = new mongoose.Schema({
         enum: [ 
             NameTitle.MALE, 
             NameTitle.FEMALE,
-            NameTitle.SINGLE_FEMALE
+            NameTitle.SINGLE_FEMALE,
+            NameTitle.NOT_SPECIFIED
         ],
         required: true
     },
