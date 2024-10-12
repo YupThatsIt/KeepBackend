@@ -34,7 +34,7 @@ const createContact = async(req, res) =>{
 
         // check for duplicated information
         const foundContact = await Contact.findOne({"phone": phone}).exec();
-        if (foundContact) return res.send(400).send("Contact's personal phone is already taken");
+        if (foundContact) return res.send(403).send("Contact's personal phone is already taken");
 
         let formattedFirstName;
         let formattedLastName; 

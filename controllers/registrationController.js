@@ -16,7 +16,7 @@ const registrationValidate = async (req, res) => {
 
         // find user
         const foundUser = await User.findOne({ $or: [{"username": user}, {"email": email}]}).exec();
-        if (foundUser) return res.status(400).send("Username or email is already taken.");
+        if (foundUser) return res.status(403).send("Username or email is already taken.");
 
         return res.status(200).send("User data is valid");
     }
@@ -43,7 +43,7 @@ const registerUser = async (req, res) => {
         if (!validatePhone(phone)) return res.status(400).send("Invalid phone number: must be number with length of 10");
         
         const foundAccount = await Account.findOne({"phone": phone}).exec();
-        if (foundAccount) return res.status(400).send("Phone number is already in used");
+        if (foundAccount) return res.status(403).send("Phone number is already in used");
 
         // capitalize english names
         let formattedFirstName;

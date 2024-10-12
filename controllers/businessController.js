@@ -27,7 +27,7 @@ const createBusiness = async(req, res) =>{
                                                             {"taxID": taxID}, 
                                                             {"address": address},
                                                             {$and: [{"name": name}, {"branch": branchName}]}]}).exec();
-        if (foundBusiness) return res.status(400).send("There's registered information already");
+        if (foundBusiness) return res.status(403).send("There's registered information already");
         
         // find the user to add id as admin
         // const userID = req.userID;
@@ -71,7 +71,7 @@ const createBusiness = async(req, res) =>{
         });
     }
     catch(err){
-        res.status(500).send("Error at create business endpoint" + err)
+        res.status(500).send("Error at create business endpoint" + err);
     }
 };
 
