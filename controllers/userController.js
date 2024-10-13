@@ -32,7 +32,7 @@ const viewUser = async(req, res) => {
         res.json(returnData);
     }
     catch(err){
-        res.status(500).send("Error at view user endpoint" + err);
+        res.status(500).send("Error at view user endpoint : " + err);
     }
 };
 
@@ -75,24 +75,44 @@ const updateUser = async (req, res) => {
         if (otherAccount) return res.sendStatus(403);
         
         // Note that foundUser will contain old information if not use option { new: true }
-        await User.updateOne({ "_id": userID}, {
+        let updateErr = false;
+        await User.findOneAndUpdate({ "_id": userID}, {
             "username": user,
             "email": email
+        }, {"new": true}).then((docs) => {
+            try {
+                console.log("Updated User : ", docs);
+            }
+            catch(err) {
+                updateErr = true;
+                return;
+            }
         });
+        if (updateErr) return res.status(500).send("User cannot be updated");
 
-        await Account.updateOne({ "userID": userID}, {
+        await Account.findOneAndUpdate({ "userID": userID}, {
             "title": title,
             "firstName": formattedFirstName,
             "lastName": formattedLastName,
             "address": address,
             "phone": phone,
             "imgUrl": imgUrl 
+        }, {"new": true}).then((docs) => {
+            try {
+                console.log("Updated Account : ", docs);
+            }
+            catch(err) {
+                updateErr = true;
+                return;
+            }
         });
+        if (updateErr) return res.status(500).send("Account cannot be updated");
+
 
         res.status(200).send("User updated");
     }
     catch(err){
-        res.status(500).send("Error at update user endpoint" + err);
+        res.status(500).send("Error at update user endpoint : " + err);
     }
 };
 
@@ -119,17 +139,17 @@ const deleteUser = async (req, res) => {
         });
         if (isAdmin) return res.status(403).send("You are an admin of a business, please delete the business first before continue");
 
-        foundUser.businessRoles.forEach(async(business) => {
+        for (const business of foundUser.businessRoles) {
             let role;
             if (business.role === BusinessRole.ACCOUNTANT) role = "accountants";
             else role = "viewers";
 
             await Business.updateOne({ "_id": business.businessID }, {
                 $pull: { 
-                    [role]: {"$in" : [{ "id": userID }]}
+                    [role]: { "id": userID }
                 }
             });
-        });
+        }
 
         await User.deleteOne({"_id": userID});
         await Account.deleteOne({"userID": userID});
@@ -137,28 +157,8 @@ const deleteUser = async (req, res) => {
         res.status(200).send("User deleted");
     }
     catch(err){
-        res.status(500).send("Error at delete user endpoint" + err);
+        res.status(500).send("Error at delete user endpoint : " + err);
     }
 };
 
-const validatePassword = async (req, res) => {
-    try {
-        
-        res.status(200).send("");
-    }
-    catch(err){
-        res.status(500).send("Error at delete user endpoint" + err);
-    }
-}
-
-const updatePassword = async (req, res) => {
-    try {
-        
-        res.status(200).send("");
-    }
-    catch(err){
-        res.status(500).send("Error at delete user endpoint" + err);
-    }
-}
-
-module.exports = { updateUser, deleteUser, viewUser, validatePassword, updatePassword };
+module.exports = { updateUser, deleteUser, viewUser };

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { viewUser, updateUser, deleteUser }  = require("../controllers/userController");
+const { viewUser, updateUser, deleteUser } = require("../controllers/userController");
+const { validatePassword, updatePassword } = require("../controllers/userPasswordController");
 const verifyJWT = require("../middlewares/verifyJWT");
 
 /* 
@@ -44,18 +45,18 @@ Detail: 1. Check user's input and validate
 NOTE: this endpoint will always send back imgUrl as it likely is the only data needed to
         get the image from image sharing services
 
-Input ->    None (user id in the access key)
+Input -> {
+                "username": String,
+                "email": String,
+                "title": Number, (Enum; 0:MALE, 1:FEMALE, 2:SINGLE_FEMALE, 3:NOT_SPECIFIED)
+                "firstName": String,
+                "lastName": String,
+                "address": String,
+                "phone": String,
+                "imgUrl": String 
+         };
 
-Outputs ->  Status 200 {
-                            "username": String,
-                            "email": String,
-                            "title": Number, (Enum; 0:MALE, 1:FEMALE, 2:SINGLE_FEMALE, 3:NOT_SPECIFIED)
-                            "firstName": String,
-                            "lastName": String,
-                            "address": String,
-                            "phone": String,
-                            "imgUrl": String 
-                        };
+Outputs ->  Status 200 
             Status 400 -> input is incorrect
             Status 401 -> no access token
             Status 403 -> can't get the info
@@ -77,18 +78,10 @@ NOTE: access token is useless at this point. so take care to
 
 Input ->    None (user id in the access key)
 
-Outputs ->  Status 200 {
-                            "username": String,
-                            "email": String,
-                            "title": Number, (Enum; 0:MALE, 1:FEMALE, 2:SINGLE_FEMALE, 3:NOT_SPECIFIED)
-                            "firstName": String,
-                            "lastName": String,
-                            "address": String,
-                            "phone": String,
-                            "imgUrl": String 
-                        };
+Outputs ->  Status 200 -> user deleted
             Status 400 -> input is incorrect
             Status 401 -> no access token
+            Status 403 -> you are an admin
             Status 403 -> can't get the info
 --------------------------------------------
 */ 

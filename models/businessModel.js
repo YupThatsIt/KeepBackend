@@ -2,7 +2,7 @@
 
 const mongoose = require("mongoose");
 
-const businessSchema = mongoose.Schema({
+const businessSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -48,7 +48,12 @@ const businessSchema = mongoose.Schema({
         }
     ],
     joiningCode: {
-        type: String
+        code: {
+            type: String
+        },
+        codeExpireAt: {
+            type: Date
+        }
     },
     logoUrl: {
         type: String

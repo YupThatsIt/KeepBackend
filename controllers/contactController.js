@@ -63,7 +63,7 @@ const createContact = async(req, res) =>{
         res.status(200).send("New contact created!");
     }
     catch(err){
-        res.status(500).send("Error at create contact endpoint" + err)
+        res.status(500).send("Error at create contact endpoint : " + err)
     }
 };
 
