@@ -9,6 +9,8 @@ const { createContact } = require("../controllers/contactController");
 POST /business/:businessName/contact
 --------------------------------------------
 
+About businessName -> It will be name-branch
+
 Detail: 1. Check if everything is formatted correctly
         2. Check if the contact phone is duplicated or not
 

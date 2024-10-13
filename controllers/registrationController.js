@@ -15,13 +15,13 @@ const registrationValidate = async (req, res) => {
         if (!validateEmail(email)) return res.status(400).send("Invalid email");
 
         // find user
-        const foundUser = await User.findOne({ $or: [{"username": user}, {"email": email}]}).exec();
-        if (foundUser) return res.status(400).send("Username or email is already taken.");
+        const foundUser = await User.findOne({ $or: [{"username": user}, {"email": email}]});
+        if (foundUser) return res.status(403).send("Username or email is already taken.");
 
         return res.status(200).send("User data is valid");
     }
     catch(err) {
-        return res.status(500).send("Error at registration validation endpoint" + err);
+        return res.status(500).send("Error at registration validation endpoint : " + err);
     }
 };
 
@@ -42,8 +42,8 @@ const registerUser = async (req, res) => {
         if (!validateName(lastName)) return res.status(400).send("Invalid firstname: must contain only TH or EN alphabet");
         if (!validatePhone(phone)) return res.status(400).send("Invalid phone number: must be number with length of 10");
         
-        const foundAccount = await Account.findOne({"phone": phone}).exec();
-        if (foundAccount) return res.status(400).send("Phone number is already in used");
+        const foundAccount = await Account.findOne({"phone": phone});
+        if (foundAccount) return res.status(403).send("Phone number is already in used");
 
         // capitalize english names
         let formattedFirstName;
@@ -95,7 +95,7 @@ const registerUser = async (req, res) => {
         return res.status(200).json({ accessToken });
     }
     catch(err) {
-        return res.status(500).send("Error at registration endpoint" + err);
+        return res.status(500).send("Error at registration endpoint : " + err);
     }
 };
 

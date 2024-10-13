@@ -13,8 +13,8 @@ const login = async (req, res) => {
         if (!user || !pwd) return res.status(400).send("Username/email and password are required!"); // send error back as json
         
         let foundUser;
-        if (validateEmail(user)) foundUser = await User.findOne({"email": user}).exec();
-        else foundUser = await User.findOne({"username": user}).exec(); 
+        if (validateEmail(user)) foundUser = await User.findOne({"email": user});
+        else foundUser = await User.findOne({"username": user}); 
         if (!foundUser) return res.sendStatus(401); // unauthorized, no user found
         
         const match = await bcrypt.compare(pwd, foundUser.password);
@@ -37,7 +37,7 @@ const login = async (req, res) => {
         }
     } 
     catch(err){
-        res.status(500).send("Error at login endpoint" + err); // Internal server error, might need to specify path if things getting bigger and bigger
+        res.status(500).send("Error at login endpoint : " + err); // Internal server error, might need to specify path if things getting bigger and bigger
     }
 };
 
@@ -50,7 +50,7 @@ const logout = async (req, res) =>{
         const refreshToken = cookies.jwt;
 
         // in case that the user is no longer in the system
-        const foundUser = await User.findOne({"refreshToken": refreshToken}).exec(); // 
+        const foundUser = await User.findOne({"refreshToken": refreshToken});
         if (!foundUser){
             res.clearCookie("jwt", { httpOnly: true});
             return res.sendStatus(204);
@@ -62,7 +62,7 @@ const logout = async (req, res) =>{
         res.sendStatus(204);
     }
     catch(err){
-        res.status(500).send("Error at logout endpoint" + err);
+        res.status(500).send("Error at logout endpoint : " + err);
     }
 };
 
@@ -72,7 +72,7 @@ const handleRefreshToken = async (req, res) => {
         if (!cookies?.jwt) return res.sendStatus(204); // no content
         const refreshToken = cookies.jwt; // receive the refresh token from cookie
         
-        const foundUser = await User.findOne({"refreshToken": refreshToken}).exec();
+        const foundUser = await User.findOne({"refreshToken": refreshToken});
         if (!foundUser) return res.sendStatus(403); // 403 forbidden
 
         jwt.verify(
@@ -86,7 +86,7 @@ const handleRefreshToken = async (req, res) => {
         );
     }
     catch(err){
-        res.status(500).send("Error at handle refresh token endpoint" + err);
+        res.status(500).send("Error at handle refresh token endpoint : " + err);
     }
 };
 

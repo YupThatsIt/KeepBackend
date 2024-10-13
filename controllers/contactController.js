@@ -34,7 +34,7 @@ const createContact = async(req, res) =>{
 
         // check for duplicated information
         const foundContact = await Contact.findOne({"phone": phone}).exec();
-        if (foundContact) return res.send(400).send("Contact's personal phone is already taken");
+        if (foundContact) return res.send(403).send("Contact's personal phone is already taken");
 
         let formattedFirstName;
         let formattedLastName; 
@@ -63,7 +63,7 @@ const createContact = async(req, res) =>{
         res.status(200).send("New contact created!");
     }
     catch(err){
-        res.status(500).send("Error at create contact endpoint" + err)
+        res.status(500).send("Error at create contact endpoint : " + err)
     }
 };
 

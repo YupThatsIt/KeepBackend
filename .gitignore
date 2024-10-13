@@ -6,3 +6,4 @@ todo.txt
 node_modules
 views
 seeding
+.env
