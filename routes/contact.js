@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const verifyJWT = require("../middlewares/verifyJWT");
 const verifyRole = require("../middlewares/checkBusinessRole");
-const { createContact } = require("../controllers/contactController");
+const { createContact, getContacts } = require("../controllers/contactController");
 
 /* 
 --------------------------------------------
@@ -13,6 +13,8 @@ About businessName -> It will be name-branch
 
 Detail: 1. Check if everything is formatted correctly
         2. Check if the contact phone is duplicated or not
+
+NOTE: the collection for this will be `contacts::businessID`
 
 Input ->    {
                 "type": Number, (Enum; 0:CLIENT, 1:SUPPLIER)
@@ -34,5 +36,7 @@ Outputs ->  Status 200 "Contact created"
 --------------------------------------------
 */ 
 router.post("/business/:businessName/contact", verifyJWT, verifyRole, createContact);
+
+router.get("/business/:businessName/contacts", verifyJWT, verifyRole, getContacts);
 
 module.exports = router;

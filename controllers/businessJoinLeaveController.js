@@ -3,6 +3,7 @@ const { User } = require("../models/userModel");
 const { BusinessRole } = require("../enum");
 const crypto = require("crypto");
 const mongoose = require("mongoose");
+const newMemberNumber = require("../utils/newMemberIdGenerator");
 
 const generateJoinCode = async (req, res) => {
     try {
@@ -71,8 +72,21 @@ const joinBusiness = async (req, res) => {
         })) return res.status(200).send("User already joined the business");
 
         // update Business
+        // generate new member number which is lowest possible number in the sequence
+        const memberNumberArr = [];
+        memberNumberArr.push(foundBusiness.admin.memberNumber);
+        for (const viewer of foundBusiness.viewers){
+            memberNumberArr.push(viewer.memberNumber);
+        }
+        for (const accountant of foundBusiness.accountants){
+            memberNumberArr.push(accountant.memberNumber);
+        }
+        memberNumberArr.sort();
+        const newMemberID = newMemberNumber(memberNumberArr);
+
         foundBusiness.viewers.push({
-            "id": userID
+            "userID": userID,
+            "memberNumber": newMemberID
         })
         await foundBusiness.save();
 
@@ -96,6 +110,7 @@ const joinBusiness = async (req, res) => {
     }
 };
 
+
 const leaveBusiness = async (req, res) => {
     try {
         // check if admin, return if true: no admin should be able to leave the business yet
@@ -114,7 +129,7 @@ const leaveBusiness = async (req, res) => {
         else role = "viewers";
         await Business.findOneAndUpdate({ "_id": businessID } ,{
             $pull: { 
-                [role]: { "id": userID }
+                [role]: { "userID": userID }
             }
         }, {"new": true}).then((docs) => {
             try {

@@ -4,6 +4,7 @@ const { validatePhone, validateTaxID } = require("../utils/stringValidation");
 const { BusinessRole } = require("../enum");
 const mongoose = require("mongoose");
 
+
 const createBusiness = async(req, res) =>{
     try{
         const { name, branch, address, phone, taxID, logoData} = req.body;
@@ -44,7 +45,8 @@ const createBusiness = async(req, res) =>{
             "phone": phone,
             "taxID": taxID,
             "admin": {
-                "id": foundUser._id
+                "userID": userID,
+                "memberNumber": 1
             },
             "accountants": [],
             "viewers": [],
@@ -75,6 +77,7 @@ const createBusiness = async(req, res) =>{
     }
 };
 
+
 const getBusinesses = async (req, res) => {
     try {
         const userID = mongoose.Types.ObjectId.createFromHexString(req.userID);
@@ -99,6 +102,7 @@ const getBusinesses = async (req, res) => {
     }
 };
 
+
 const viewBusiness = async (req, res) => {
     try {
         // no role checking because anyone can do it
@@ -121,6 +125,7 @@ const viewBusiness = async (req, res) => {
         res.status(500).send("Error at view businesses endpoint : " + err);
     }
 };
+
 
 const updateBusiness = async (req, res) => {
     try {
@@ -176,6 +181,7 @@ const updateBusiness = async (req, res) => {
         res.status(500).send("Error at update businesses endpoint : " + err);
     }
 };
+
 
 const deleteBusiness = async (req, res) => {
     try {
