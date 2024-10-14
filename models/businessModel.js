@@ -24,16 +24,24 @@ const businessSchema = new mongoose.Schema({
         unique: true
     },
     admin: {
-        id: {
+        userID: {
             type: mongoose.Schema.Types.ObjectId,
+            required: true
+        },
+        memberNumber: {
+            type: Number,
             required: true
         }
     },
     accountants: [
         {
             _id: false,
-            id: {
+            userID: {
                 type: mongoose.Schema.Types.ObjectId,
+                required: true
+            },
+            memberNumber: {
+                type: Number,
                 required: true
             }
         }
@@ -41,8 +49,12 @@ const businessSchema = new mongoose.Schema({
     viewers: [
         {
             _id: false,
-            id: {
+            userID: {
                 type: mongoose.Schema.Types.ObjectId,
+                required: true
+            },
+            memberNumber: {
+                type: Number,
                 required: true
             }
         }

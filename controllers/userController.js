@@ -127,12 +127,8 @@ const deleteUser = async (req, res) => {
         const foundAccount = await Account.findOne({ "userID": userID});
         if (!foundAccount) return res.status(403).send("No account is found");
 
-        // unfortunately, we need to check for admin first before proceeding or else
+        // we need to check for admin first before proceeding or else
         // we might delete data before knowing that the user is in fact is an admin
-        // const isAdmin = foundUser.businessRoles.find((business) => {
-        //     business.role === BusinessRole.BUSINESS_ADMIN;
-        // });
-
         let isAdmin = false;
         foundUser.businessRoles.forEach((business) => {
             if (business.role === BusinessRole.BUSINESS_ADMIN) isAdmin = true;
@@ -146,7 +142,7 @@ const deleteUser = async (req, res) => {
 
             await Business.updateOne({ "_id": business.businessID }, {
                 $pull: { 
-                    [role]: { "id": userID }
+                    [role]: { "userID": userID }
                 }
             });
         }

@@ -4,6 +4,7 @@ const verifyJWT = require("../middlewares/verifyJWT");
 const verifyRole = require("../middlewares/checkBusinessRole");
 const { createBusiness, getBusinesses, viewBusiness, updateBusiness } = require("../controllers/businessController");
 const { generateJoinCode, joinBusiness, leaveBusiness } = require("../controllers/businessJoinLeaveController");
+const { getBusinessMembers } = require("../controllers/businessMemberController");
 
 /* 
 --------------------------------------------
@@ -112,7 +113,7 @@ router.get("/business/:businessName/join-code", verifyJWT, verifyRole, generateJ
 
 /* 
 --------------------------------------------
-PUT /business/:businessName
+POST /business/join
 --------------------------------------------
 
 Detail: Join the business
@@ -128,7 +129,7 @@ router.post("/business/join", verifyJWT, joinBusiness);
 
 /* 
 --------------------------------------------
-PUT /business/:businessName
+DELETE /business/:businessName/leave
 --------------------------------------------
 
 Detail: Leave a business if the user is not the admin
@@ -138,6 +139,9 @@ Input -> Nothing
 Outputs ->  Status 200 -> Business joined
 --------------------------------------------
 */ 
-router.post("/business/:businessName/leave", verifyJWT, verifyRole, leaveBusiness);
+router.delete("/business/:businessName/leave", verifyJWT, verifyRole, leaveBusiness);
+
+router.get("/business/:businessName/members", verifyJWT, verifyRole, getBusinessMembers);
+
 
 module.exports = router;

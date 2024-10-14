@@ -9,7 +9,7 @@ const contactSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true
     },
-    contactorType: {
+    contactType: {
         type: Number,
         enum: [
             ContactType.CLIENT,
@@ -42,8 +42,9 @@ const contactSchema = new mongoose.Schema({
     businessName: {
         type: String
     },
-    businessPhone: {
-        type: String
+    email: {
+        type: String,
+        required: true
     },
     address: {
         type: String,
