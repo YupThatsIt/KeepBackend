@@ -11,6 +11,7 @@ const {
 const {
   addFinancialAccount,
   updateFinancialAccount,
+  updateAccountAmount,
 } = require("../controllers/financialAccountController");
 
 /* 
@@ -118,4 +119,32 @@ router.put(
   updateFinancialAccount
 );
 
+/* 
+--------------------------------------------
+PUT /business/:businessID/finance/account/:accountID/amount
+--------------------------------------------
+
+Detail: Update the amount (balance) of an existing financial account
+        Only accessible by Admin and Accountant roles
+
+Input: 
+    {
+        "amount": Number
+    }
+
+Outputs:  
+    Status 200 { message: "Account balance updated successfully", account: Object }
+    Status 400 Bad Request (invalid input)
+    Status 401 Unauthorized (no token)
+    Status 403 Forbidden (insufficient permissions)
+    Status 404 Account not found
+    Status 500 Server error
+--------------------------------------------
+*/
+router.put(
+  "/business/:businessID/finance/account/:accountID/amount",
+  verifyJWT,
+  verifyRole,
+  updateAccountAmount
+);
 module.exports = router;
