@@ -6,6 +6,7 @@ const verifyRole = require("../middlewares/checkBusinessRole");
 const {
   addTransaction,
   getTransaction,
+  deleteTransaction,
 } = require("../controllers/transactionController");
 
 /* 
@@ -42,6 +43,12 @@ router.get(
   verifyJWT,
   verifyRole,
   getTransaction
+);
+router.delete(
+  "/business/:businessID/finance/transaction/:transactionID",
+  verifyJWT,
+  verifyRole,
+  deleteTransaction
 );
 
 module.exports = router;

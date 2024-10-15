@@ -64,29 +64,70 @@ const addTransaction = async (req, res) => {
 
 const getTransaction = async (req, res) => {
   try {
-      const { businessID, transactionID } = req.params;
+    const { businessID, transactionID } = req.params;
 
-      // Validate businessID and transactionID
-      if (!mongoose.Types.ObjectId.isValid(businessID) || !mongoose.Types.ObjectId.isValid(transactionID)) {
-          return res.status(400).send("Invalid businessID or transactionID");
-      }
+    // Validate businessID and transactionID
+    if (
+      !mongoose.Types.ObjectId.isValid(businessID) ||
+      !mongoose.Types.ObjectId.isValid(transactionID)
+    ) {
+      return res.status(400).send("Invalid businessID or transactionID");
+    }
 
-      const Transaction = transactionCreator(`transactions::${businessID}`);
+    const Transaction = transactionCreator(`transactions::${businessID}`);
 
-      const transaction = await Transaction.findOne({
-          _id: transactionID,
-          businessID: businessID
-      });
+    const transaction = await Transaction.findOne({
+      _id: transactionID,
+      businessID: businessID,
+    });
 
-      if (!transaction) {
-          return res.status(404).send("Transaction not found");
-      }
+    if (!transaction) {
+      return res.status(404).send("Transaction not found");
+    }
 
-      res.status(200).json({ transaction });
+    res.status(200).json({ transaction });
   } catch (err) {
-      console.error("Error in getTransaction:", err);
-      res.status(500).send("Error retrieving transaction: " + err.message);
+    console.error("Error in getTransaction:", err);
+    res.status(500).send("Error retrieving transaction: " + err.message);
   }
 };
 
-module.exports = { addTransaction ,getTransaction};
+const deleteTransaction = async (req, res) => {
+  try {
+    // Check if user has proper role (Admin or Accountant)
+    if (
+      req.role !== BusinessRole.BUSINESS_ADMIN &&
+      req.role !== BusinessRole.ACCOUNTANT
+    ) {
+      return res.status(403).send("Unauthorized: Insufficient permissions");
+    }
+
+    const { businessID, transactionID } = req.params;
+
+    // Validate businessID and transactionID
+    if (
+      !mongoose.Types.ObjectId.isValid(businessID) ||
+      !mongoose.Types.ObjectId.isValid(transactionID)
+    ) {
+      return res.status(400).send("Invalid businessID or transactionID");
+    }
+
+    const Transaction = transactionCreator(`transactions::${businessID}`);
+
+    const deletedTransaction = await Transaction.findOneAndDelete({
+      _id: transactionID,
+      businessID: businessID,
+    });
+
+    if (!deletedTransaction) {
+      return res.status(404).send("Transaction not found");
+    }
+
+    res.status(200).json({ message: "Transaction deleted successfully" });
+  } catch (err) {
+    console.error("Error in deleteTransaction:", err);
+    res.status(500).send("Error deleting transaction: " + err.message);
+  }
+};
+
+module.exports = { addTransaction, getTransaction ,deleteTransaction };
