@@ -17,6 +17,10 @@ const {
   listFinancialAccounts,
   getFinancialAccount,
 } = require("../controllers/financialAccountController");
+const {
+  getBankProviders,
+  getEWalletProviders,
+} = require("../controllers/financialProviderController");
 
 /* 
 --------------------------------------------
@@ -249,6 +253,50 @@ router.get(
   verifyJWT,
   verifyRole,
   getFinancialAccount
+);
+
+/* 
+--------------------------------------------
+GET /business/:businessID/finance/bank-providers
+--------------------------------------------
+
+Detail: Retrieve all available bank providers for the given business
+        Accessible by users with valid access token and business access
+
+Outputs:  
+    Status 200 { bankProviders: Array of bank provider objects }
+    Status 401 Unauthorized (no token)
+    Status 403 Forbidden (insufficient permissions)
+    Status 500 Server error
+--------------------------------------------
+*/
+router.get(
+  "/business/:businessID/finance/bank-providers",
+  verifyJWT,
+  verifyRole,
+  getBankProviders
+);
+
+/* 
+--------------------------------------------
+GET /business/:businessID/finance/ewallet-providers
+--------------------------------------------
+
+Detail: Retrieve all available e-wallet providers for the given business
+        Accessible by users with valid access token and business access
+
+Outputs:  
+    Status 200 { ewalletProviders: Array of e-wallet provider objects }
+    Status 401 Unauthorized (no token)
+    Status 403 Forbidden (insufficient permissions)
+    Status 500 Server error
+--------------------------------------------
+*/
+router.get(
+  "/business/:businessID/finance/ewallet-providers",
+  verifyJWT,
+  verifyRole,
+  getEWalletProviders
 );
 
 module.exports = router;
