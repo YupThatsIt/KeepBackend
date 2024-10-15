@@ -14,6 +14,7 @@ const {
   updateFinancialAccount,
   updateAccountAmount,
   deleteFinancialAccount,
+  getFinancialAccounts,
 } = require("../controllers/financialAccountController");
 
 /* 
@@ -202,6 +203,28 @@ router.delete(
   verifyJWT,
   verifyRole,
   deleteFinancialAccount
+);
+
+/* 
+--------------------------------------------
+GET /business/:businessID/finance/accounts
+--------------------------------------------
+
+Detail: Retrieve all financial accounts for the given business
+        Accessible by users with valid access token and business access
+
+Outputs:  
+    Status 200 { accounts: Array of financial account objects }
+    Status 401 Unauthorized (no token)
+    Status 403 Forbidden (insufficient permissions)
+    Status 500 Server error
+--------------------------------------------
+*/
+router.get(
+  "/business/:businessID/finance/accounts",
+  verifyJWT,
+  verifyRole,
+  getFinancialAccounts
 );
 
 module.exports = router;
