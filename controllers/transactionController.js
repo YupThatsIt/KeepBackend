@@ -62,4 +62,31 @@ const addTransaction = async (req, res) => {
   }
 };
 
-module.exports = { addTransaction };
+const getTransaction = async (req, res) => {
+  try {
+      const { businessID, transactionID } = req.params;
+
+      // Validate businessID and transactionID
+      if (!mongoose.Types.ObjectId.isValid(businessID) || !mongoose.Types.ObjectId.isValid(transactionID)) {
+          return res.status(400).send("Invalid businessID or transactionID");
+      }
+
+      const Transaction = transactionCreator(`transactions::${businessID}`);
+
+      const transaction = await Transaction.findOne({
+          _id: transactionID,
+          businessID: businessID
+      });
+
+      if (!transaction) {
+          return res.status(404).send("Transaction not found");
+      }
+
+      res.status(200).json({ transaction });
+  } catch (err) {
+      console.error("Error in getTransaction:", err);
+      res.status(500).send("Error retrieving transaction: " + err.message);
+  }
+};
+
+module.exports = { addTransaction ,getTransaction};

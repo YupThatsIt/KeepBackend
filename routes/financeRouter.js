@@ -3,7 +3,10 @@ const express = require("express");
 const router = express.Router();
 const verifyJWT = require("../middlewares/verifyJWT");
 const verifyRole = require("../middlewares/checkBusinessRole");
-const { addTransaction } = require("../controllers/transactionController");
+const {
+  addTransaction,
+  getTransaction,
+} = require("../controllers/transactionController");
 
 /* 
 --------------------------------------------
@@ -33,6 +36,12 @@ router.post(
   verifyJWT,
   verifyRole,
   addTransaction
+);
+router.get(
+  "/business/:businessID/finance/transaction/:transactionID",
+  verifyJWT,
+  verifyRole,
+  getTransaction
 );
 
 module.exports = router;
