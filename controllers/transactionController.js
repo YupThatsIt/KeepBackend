@@ -130,4 +130,51 @@ const deleteTransaction = async (req, res) => {
   }
 };
 
-module.exports = { addTransaction, getTransaction ,deleteTransaction };
+const getTransactions = async (req, res) => {
+  try {
+    const { businessID } = req.params;
+    const { type, "start-date": startDate, "end-date": endDate } = req.query;
+
+    const Transaction = transactionCreator(`transactions::${businessID}`);
+
+    // Build query
+    let query = { businessID: mongoose.Types.ObjectId(businessID) };
+
+    // Add type filter
+    if (type && type !== "all") {
+      if (type === "income") {
+        query.transactionType = TransactionType.INCOME;
+      } else if (type === "expense") {
+        query.transactionType = TransactionType.EXPENSE;
+      } else {
+        return res.status(400).send("Invalid transaction type");
+      }
+    }
+
+    // Add date range filter
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) {
+        query.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        query.createdAt.$lte = new Date(endDate);
+      }
+    }
+
+    // Execute query
+    const transactions = await Transaction.find(query).sort({ createdAt: -1 });
+
+    res.status(200).json({ transactions });
+  } catch (err) {
+    console.error("Error in getTransactions:", err);
+    res.status(500).send("Error retrieving transactions: " + err.message);
+  }
+};
+
+module.exports = {
+  addTransaction,
+  getTransaction,
+  deleteTransaction,
+  getTransactions,
+};

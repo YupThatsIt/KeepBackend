@@ -7,6 +7,7 @@ const {
   addTransaction,
   getTransaction,
   deleteTransaction,
+  getTransactions,
 } = require("../controllers/transactionController");
 const {
   addFinancialAccount,
@@ -57,6 +58,35 @@ router.delete(
   deleteTransaction
 );
 
+/* 
+--------------------------------------------
+GET /business/:businessID/finance/transactions
+--------------------------------------------
+
+Detail: Retrieve transactions for the given business with optional filters
+        Accessible by users with valid access token and business access
+
+Query Parameters:
+    type: 'income', 'expense', or 'all' (optional)
+    start-date: Start date for filtering (optional)
+    end-date: End date for filtering (optional)
+
+Outputs:  
+    Status 200 { transactions: Array of transaction objects }
+    Status 400 Bad Request (invalid parameters)
+    Status 401 Unauthorized (no token)
+    Status 403 Forbidden (insufficient permissions)
+    Status 500 Server error
+--------------------------------------------
+*/
+router.get(
+  "/business/:businessID/finance/transactions",
+  verifyJWT,
+  verifyRole,
+  getTransactions
+);
+
+module.exports = router;
 /* 
 --------------------------------------------
 POST /business/:businessID/finance/account
