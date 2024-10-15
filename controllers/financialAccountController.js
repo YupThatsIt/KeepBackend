@@ -59,12 +59,10 @@ const addFinancialAccount = async (req, res) => {
 
     await newAccount.save();
 
-    res
-      .status(201)
-      .json({
-        message: "Financial account created successfully",
-        account: newAccount,
-      });
+    res.status(201).json({
+      message: "Financial account created successfully",
+      account: newAccount,
+    });
   } catch (err) {
     console.error("Error in addFinancialAccount:", err);
     res.status(500).send("Error creating financial account: " + err.message);
@@ -128,4 +126,55 @@ const updateFinancialAccount = async (req, res) => {
   }
 };
 
-module.exports = { addFinancialAccount,updateFinancialAccount};
+const updateAccountAmount = async (req, res) => {
+  try {
+    // Check if user has proper role (Admin or Accountant)
+    if (
+      req.role !== BusinessRole.BUSINESS_ADMIN &&
+      req.role !== BusinessRole.ACCOUNTANT
+    ) {
+      return res.status(403).send("Unauthorized: Insufficient permissions");
+    }
+
+    const { businessID, accountID } = req.params;
+    const { amount } = req.body;
+
+    // Validate input
+    if (amount === undefined || isNaN(amount)) {
+      return res.status(400).send("Invalid or missing amount");
+    }
+
+    // Find the account (could be bank or e-wallet)
+    const BankAccount = bankAccountCreator(`financial_accounts::${businessID}`);
+    const EWalletAccount = ewalletAccountCreator(
+      `financial_accounts::${businessID}`
+    );
+
+    let account = await BankAccount.findById(accountID);
+
+    if (!account) {
+      account = await EWalletAccount.findById(accountID);
+    }
+
+    if (!account) {
+      return res.status(404).send("Financial account not found");
+    }
+
+    // Update the account balance
+    account.balance = amount; // Assuming there's a 'balance' field in your schema
+    await account.save();
+
+    res
+      .status(200)
+      .json({ message: "Account balance updated successfully", account });
+  } catch (err) {
+    console.error("Error in updateAccountAmount:", err);
+    res.status(500).send("Error updating account balance: " + err.message);
+  }
+};
+
+module.exports = {
+  addFinancialAccount,
+  updateFinancialAccount,
+  updateAccountAmount,
+};
