@@ -8,6 +8,9 @@ const {
   getTransaction,
   deleteTransaction,
 } = require("../controllers/transactionController");
+const {
+  addFinancialAccount,
+} = require("../controllers/financialAccountController");
 
 /* 
 --------------------------------------------
@@ -49,6 +52,38 @@ router.delete(
   verifyJWT,
   verifyRole,
   deleteTransaction
+);
+
+/* 
+--------------------------------------------
+POST /business/:businessID/finance/account
+--------------------------------------------
+
+Detail: Create a new financial account for the given business
+        Only accessible by Admin and Accountant roles
+
+Input: 
+    {
+        "providerID": String,
+        "accountName": String,
+        "accountType": String, // "bank" or "ewallet"
+        "accountNumber": String, // for bank accounts
+        "accountID": String // for ewallet accounts
+    }
+
+Outputs:  
+    Status 201 { message: "Financial account created successfully", account: Object }
+    Status 400 Bad Request (invalid input)
+    Status 401 Unauthorized (no token)
+    Status 403 Forbidden (insufficient permissions)
+    Status 500 Server error
+--------------------------------------------
+*/
+router.post(
+  "/business/:businessID/finance/account",
+  verifyJWT,
+  verifyRole,
+  addFinancialAccount
 );
 
 module.exports = router;
