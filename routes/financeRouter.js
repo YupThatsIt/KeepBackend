@@ -12,6 +12,7 @@ const {
   addFinancialAccount,
   updateFinancialAccount,
   updateAccountAmount,
+  deleteFinancialAccount,
 } = require("../controllers/financialAccountController");
 
 /* 
@@ -147,4 +148,30 @@ router.put(
   verifyRole,
   updateAccountAmount
 );
+
+/* 
+--------------------------------------------
+DELETE /business/:businessID/finance/account/:accountID
+--------------------------------------------
+
+Detail: Delete an existing financial account for the given business
+        Only accessible by Admin and Accountant roles
+
+Input: None (accountID in URL parameters)
+
+Outputs:  
+    Status 200 { message: "Financial account deleted successfully" }
+    Status 401 Unauthorized (no token)
+    Status 403 Forbidden (insufficient permissions)
+    Status 404 Account not found
+    Status 500 Server error
+--------------------------------------------
+*/
+router.delete(
+  "/business/:businessID/finance/account/:accountID",
+  verifyJWT,
+  verifyRole,
+  deleteFinancialAccount
+);
+
 module.exports = router;
