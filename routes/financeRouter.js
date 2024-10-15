@@ -51,12 +51,14 @@ router.post(
   verifyRole,
   addTransaction
 );
+
 router.get(
   "/business/:businessID/finance/transaction/:transactionID",
   verifyJWT,
   verifyRole,
   getTransaction
 );
+
 router.delete(
   "/business/:businessID/finance/transaction/:transactionID",
   verifyJWT,
@@ -76,13 +78,6 @@ Query Parameters:
     type: 'income', 'expense', or 'all' (optional)
     start-date: Start date for filtering (optional)
     end-date: End date for filtering (optional)
-
-Outputs:  
-    Status 200 { transactions: Array of transaction objects }
-    Status 400 Bad Request (invalid parameters)
-    Status 401 Unauthorized (no token)
-    Status 403 Forbidden (insufficient permissions)
-    Status 500 Server error
 --------------------------------------------
 */
 router.get(
@@ -92,7 +87,6 @@ router.get(
   getTransactions
 );
 
-module.exports = router;
 /* 
 --------------------------------------------
 POST /business/:businessID/finance/account
@@ -109,13 +103,6 @@ Input:
         "accountNumber": String, // for bank accounts
         "accountID": String // for ewallet accounts
     }
-
-Outputs:  
-    Status 201 { message: "Financial account created successfully", account: Object }
-    Status 400 Bad Request (invalid input)
-    Status 401 Unauthorized (no token)
-    Status 403 Forbidden (insufficient permissions)
-    Status 500 Server error
 --------------------------------------------
 */
 router.post(
@@ -140,13 +127,6 @@ Input:
         "accountID": String // for ewallet accounts
     }
 
-Outputs:  
-    Status 200 { message: "Financial account updated successfully", account: Object }
-    Status 400 Bad Request (invalid input)
-    Status 401 Unauthorized (no token)
-    Status 403 Forbidden (insufficient permissions)
-    Status 404 Account not found
-    Status 500 Server error
 --------------------------------------------
 */
 router.put(
@@ -168,14 +148,6 @@ Input:
     {
         "amount": Number
     }
-
-Outputs:  
-    Status 200 { message: "Account balance updated successfully", account: Object }
-    Status 400 Bad Request (invalid input)
-    Status 401 Unauthorized (no token)
-    Status 403 Forbidden (insufficient permissions)
-    Status 404 Account not found
-    Status 500 Server error
 --------------------------------------------
 */
 router.put(
@@ -195,12 +167,6 @@ Detail: Delete an existing financial account for the given business
 
 Input: None (accountID in URL parameters)
 
-Outputs:  
-    Status 200 { message: "Financial account deleted successfully" }
-    Status 401 Unauthorized (no token)
-    Status 403 Forbidden (insufficient permissions)
-    Status 404 Account not found
-    Status 500 Server error
 --------------------------------------------
 */
 router.delete(
@@ -217,12 +183,6 @@ GET /business/:businessID/finance/accounts
 
 Detail: Retrieve all financial accounts for the given business
         Accessible by users with valid access token and business access
-
-Outputs:  
-    Status 200 { accounts: Array of financial account objects }
-    Status 401 Unauthorized (no token)
-    Status 403 Forbidden (insufficient permissions)
-    Status 500 Server error
 --------------------------------------------
 */
 router.get(
@@ -240,12 +200,6 @@ GET /business/:businessID/finance/account/:accountID
 Detail: Retrieve details of a specific financial account for the given business
         Accessible by users with valid access token and business access
 
-Outputs:  
-    Status 200 { account: Financial account object }
-    Status 401 Unauthorized (no token)
-    Status 403 Forbidden (insufficient permissions)
-    Status 404 Account not found
-    Status 500 Server error
 --------------------------------------------
 */
 router.get(
@@ -262,12 +216,6 @@ GET /business/:businessID/finance/bank-providers
 
 Detail: Retrieve all available bank providers for the given business
         Accessible by users with valid access token and business access
-
-Outputs:  
-    Status 200 { bankProviders: Array of bank provider objects }
-    Status 401 Unauthorized (no token)
-    Status 403 Forbidden (insufficient permissions)
-    Status 500 Server error
 --------------------------------------------
 */
 router.get(
@@ -285,11 +233,6 @@ GET /business/:businessID/finance/ewallet-providers
 Detail: Retrieve all available e-wallet providers for the given business
         Accessible by users with valid access token and business access
 
-Outputs:  
-    Status 200 { ewalletProviders: Array of e-wallet provider objects }
-    Status 401 Unauthorized (no token)
-    Status 403 Forbidden (insufficient permissions)
-    Status 500 Server error
 --------------------------------------------
 */
 router.get(
