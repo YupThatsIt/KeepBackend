@@ -212,7 +212,7 @@ const deleteFinancialAccount = async (req, res) => {
   }
 };
 
-const getFinancialAccounts = async (req, res) => {
+const listFinancialAccounts = async (req, res) => {
   try {
     const { businessID } = req.params;
 
@@ -244,10 +244,46 @@ const getFinancialAccounts = async (req, res) => {
   }
 };
 
+const getFinancialAccount = async (req, res) => {
+  try {
+    const { businessID, accountID } = req.params;
+
+    // Check both bank and e-wallet accounts
+    const BankAccount = bankAccountCreator(`financial_accounts::${businessID}`);
+    const EWalletAccount = ewalletAccountCreator(
+      `financial_accounts::${businessID}`
+    );
+
+    let account = await BankAccount.findById(accountID);
+    let accountType = "bank";
+
+    if (!account) {
+      account = await EWalletAccount.findById(accountID);
+      accountType = "ewallet";
+    }
+
+    if (!account) {
+      return res.status(404).send("Financial account not found");
+    }
+
+    // Format the account data
+    const formattedAccount = {
+      ...account.toObject(),
+      accountType,
+    };
+
+    res.status(200).json({ account: formattedAccount });
+  } catch (err) {
+    console.error("Error in getFinancialAccount:", err);
+    res.status(500).send("Error retrieving financial account: " + err.message);
+  }
+};
+
 module.exports = {
   addFinancialAccount,
   updateFinancialAccount,
   updateAccountAmount,
   deleteFinancialAccount,
-  getFinancialAccounts 
+  listFinancialAccounts,
+  getFinancialAccount
 };
