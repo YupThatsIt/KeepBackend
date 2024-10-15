@@ -173,8 +173,48 @@ const updateAccountAmount = async (req, res) => {
   }
 };
 
+const deleteFinancialAccount = async (req, res) => {
+  try {
+    // Check if user has proper role (Admin or Accountant)
+    if (
+      req.role !== BusinessRole.BUSINESS_ADMIN &&
+      req.role !== BusinessRole.ACCOUNTANT
+    ) {
+      return res.status(403).send("Unauthorized: Insufficient permissions");
+    }
+
+    const { businessID, accountID } = req.params;
+
+    // Find and delete the account (could be bank or e-wallet)
+    const BankAccount = bankAccountCreator(`financial_accounts::${businessID}`);
+    const EWalletAccount = ewalletAccountCreator(
+      `financial_accounts::${businessID}`
+    );
+
+    let deletedAccount = await BankAccount.findByIdAndDelete(accountID);
+
+    if (!deletedAccount) {
+      deletedAccount = await EWalletAccount.findByIdAndDelete(accountID);
+    }
+
+    if (!deletedAccount) {
+      return res.status(404).send("Financial account not found");
+    }
+
+    // You might want to add additional logic here, such as:
+    // - Checking if there are any transactions associated with this account
+    // - Updating any related records or totals
+
+    res.status(200).json({ message: "Financial account deleted successfully" });
+  } catch (err) {
+    console.error("Error in deleteFinancialAccount:", err);
+    res.status(500).send("Error deleting financial account: " + err.message);
+  }
+};
+
 module.exports = {
   addFinancialAccount,
   updateFinancialAccount,
   updateAccountAmount,
+  deleteFinancialAccount,
 };
