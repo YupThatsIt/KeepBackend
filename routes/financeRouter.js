@@ -10,6 +10,7 @@ const {
 } = require("../controllers/transactionController");
 const {
   addFinancialAccount,
+  updateFinancialAccount,
 } = require("../controllers/financialAccountController");
 
 /* 
@@ -84,6 +85,37 @@ router.post(
   verifyJWT,
   verifyRole,
   addFinancialAccount
+);
+
+/* 
+--------------------------------------------
+PUT /business/:businessID/finance/account/:accountID
+--------------------------------------------
+
+Detail: Update an existing financial account for the given business
+        Only accessible by Admin and Accountant roles
+
+Input: 
+    {
+        "accountName": String,
+        "accountNumber": String, // for bank accounts
+        "accountID": String // for ewallet accounts
+    }
+
+Outputs:  
+    Status 200 { message: "Financial account updated successfully", account: Object }
+    Status 400 Bad Request (invalid input)
+    Status 401 Unauthorized (no token)
+    Status 403 Forbidden (insufficient permissions)
+    Status 404 Account not found
+    Status 500 Server error
+--------------------------------------------
+*/
+router.put(
+  "/business/:businessID/finance/account/:accountID",
+  verifyJWT,
+  verifyRole,
+  updateFinancialAccount
 );
 
 module.exports = router;
