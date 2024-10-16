@@ -211,7 +211,7 @@ router.get(
 
 /* 
 --------------------------------------------
-GET /business/:businessID/finance/bank-providers
+GET /finance/bank-providers
 --------------------------------------------
 
 Detail: Retrieve all available bank providers for the given business
@@ -222,7 +222,7 @@ router.get("/finance/bank-providers", verifyJWT, getBankProviders);
 
 /* 
 --------------------------------------------
-GET /business/:businessID/finance/ewallet-providers
+GET /finance/ewallet-providers
 --------------------------------------------
 
 Detail: Retrieve all available e-wallet providers for the given business
