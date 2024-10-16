@@ -218,12 +218,7 @@ Detail: Retrieve all available bank providers for the given business
         Accessible by users with valid access token and business access
 --------------------------------------------
 */
-router.get(
-  "/business/:businessID/finance/bank-providers",
-  verifyJWT,
-  verifyRole,
-  getBankProviders
-);
+router.get("/finance/bank-providers", verifyJWT, getBankProviders);
 
 /* 
 --------------------------------------------
@@ -235,11 +230,6 @@ Detail: Retrieve all available e-wallet providers for the given business
 
 --------------------------------------------
 */
-router.get(
-  "/business/:businessID/finance/ewallet-providers",
-  verifyJWT,
-  verifyRole,
-  getEWalletProviders
-);
+router.get("/finance/ewallet-providers", verifyJWT, getEWalletProviders);
 
 module.exports = router;
