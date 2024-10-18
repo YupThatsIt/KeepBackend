@@ -9,85 +9,141 @@ require("dotenv").config();
 const login = async (req, res) => {
     try {
         // get JSON body
-        const { user, pwd } = req.body;
-        if (!user || !pwd) return res.status(400).send("Username/email and password are required!"); // send error back as json
+        const {
+            user,
+            pwd 
+        } = req.body;
+
+        // Check input's completeness
+        if (!user ||
+            !pwd
+        ) return res.status(400).json({
+            "status": "error",
+            "message": "Incomplete input: user and pwd are needed"
+        });
         
-        let foundUser;
-        if (validateEmail(user)) foundUser = await User.findOne({"email": user});
-        else foundUser = await User.findOne({"username": user}); 
-        if (!foundUser) return res.sendStatus(401); // unauthorized, no user found
+        // Check if user is in the database
+        const identifierType = (validateEmail(user)) ? "email": "username";
+        const foundUser = await User.findOne({[identifierType]: user}); 
+        if (!foundUser) return res.status(401).json({
+            "status": "error",
+            "message": "User is not in the system"
+        });
         
+        // Check if pwd match the user's password
         const match = await bcrypt.compare(pwd, foundUser.password);
         if (match) {
-            // create JWTs
             const accessToken = generateAccessToken(foundUser._id);
             const refreshToken = generateRefreshToken(foundUser._id);
-            foundUser.refreshToken = refreshToken;
-            await foundUser.save(); // save the refresh token in the user database. DON'T FORGET .save()
 
-            console.log(`User ${foundUser.username} logged in`);
+            // Update refresh token
+            foundUser.refreshToken = refreshToken;
+            await foundUser.save();
+
             res.cookie("jwt", refreshToken, {
                 httpOnly: true,
                 maxAge: 24 * 60 * 60 * 1000 // in millisecond
             });
-            res.json({ accessToken }); // send the tokens to client
+            res.status(200).json({ 
+                "status": "success",
+                "message": `User ${foundUser.username} logged in`,
+                "access token": accessToken
+            });
         }
         else {
-            res.sendStatus(401);
+            res.status(401).json({
+                "status": "error",
+                "message": "Password is incorrect"
+            });
         }
     } 
     catch(err){
-        res.status(500).send("Error at login endpoint : " + err); // Internal server error, might need to specify path if things getting bigger and bigger
+        console.error("Unexpected error at login endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at login endpoint"
+        });
     }
 };
 
+
 const logout = async (req, res) =>{
-    // On client, please delete the accessToken too
     try {
         // in case that there is no refresh token in the cookie
         const cookies = req.cookies;
-        if (!cookies?.jwt) return res.sendStatus(204);
-        const refreshToken = cookies.jwt;
-
+        if (!cookies?.jwt) return res.status(204).json({
+            "status": "success",
+            "message": "No jwt header in cookie"
+        });
+        
         // in case that the user is no longer in the system
+        const refreshToken = cookies.jwt;
         const foundUser = await User.findOne({"refreshToken": refreshToken});
         if (!foundUser){
             res.clearCookie("jwt", { httpOnly: true});
-            return res.sendStatus(204);
+            return res.status(204).json({
+                "status": "success",
+                "message": "User is deleted"
+            });
         }
 
         foundUser.refreshToken = "";
         await foundUser.save();
         res.clearCookie("jwt", { httpOnly: true}); // add secure: true to make it https
-        res.sendStatus(204);
+        res.sendStatus(204).json({
+            "status": "success",
+            "message": `User ${foundUser.username} logged out`
+        });
     }
     catch(err){
-        res.status(500).send("Error at logout endpoint : " + err);
+        console.error("Unexpected error at logout endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at logout endpoint"
+        });
     }
 };
+
 
 const handleRefreshToken = async (req, res) => {
     try {
         const cookies = req.cookies;
-        if (!cookies?.jwt) return res.sendStatus(204); // no content
-        const refreshToken = cookies.jwt; // receive the refresh token from cookie
+        if (!cookies?.jwt) return res.status(401).json({
+            "status": "error",
+            "message": "Unauthorized"
+        });
+        const refreshToken = cookies.jwt;
         
         const foundUser = await User.findOne({"refreshToken": refreshToken});
-        if (!foundUser) return res.sendStatus(403); // 403 forbidden
+        if (!foundUser) return res.status(401).json({
+            "status": "error",
+            "message": "Unauthorized"
+        });
 
         jwt.verify(
             refreshToken,
             process.env.REFRESH_TOKEN_SECRET,
             (err, decoded) => {
-                if (err || JSON.stringify(foundUser._id) !== JSON.stringify(decoded.userID)) return res.sendStatus(403);
+                if (err || JSON.stringify(foundUser._id) !== JSON.stringify(decoded.userID)) return res.json({
+                    "status": "error",
+                    "message": "Unauthorized"
+                });
                 const accessToken = generateAccessToken(foundUser._id);
-                res.json({ accessToken })
+                res.json({
+                    "status": "success",
+                    "message": "Access token refreshed",
+                    "access token": accessToken
+                });
             }
         );
     }
     catch(err){
-        res.status(500).send("Error at handle refresh token endpoint : " + err);
+        console.error("Unexpected error at access token refreshment endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at access token refreshment endpoint"
+        });
     }
 };
 
-module.exports = { login, logout,handleRefreshToken };
+module.exports = { login, logout, handleRefreshToken };

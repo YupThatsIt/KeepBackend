@@ -1,63 +1,122 @@
 const { User, Account } = require("../models/userModel");
 const { validateEmail, validateNameEN, validateName, validatePhone }= require("../utils/stringValidation");
 const { generateAccessToken, generateRefreshToken } = require("../utils/generateToken");
-
 const bcrypt = require("bcrypt");
 
 const registrationValidate = async (req, res) => {
     try {
-        const { user, email } = req.body;
+        const { 
+            user,
+            email 
+        } = req.body;
 
-        // check if user or email is undefined. In case data got lost when sending
-        if (!user || !email) return res.status(400).send("Input is incomplete");
+        // Check input's completeness
+        if (
+            !user || 
+            !email
+        ) return res.status(400).json({
+            "status": "error",
+            "message": "Incomplete input: user and email are needed"
+        });
         
-        // validate email format
-        if (!validateEmail(email)) return res.status(400).send("Invalid email");
+        // Return invalid email
+        if (!validateEmail(email)) return res.status(400).json({
+            "status": "error",
+            "message": "Incorrect format: email's format is wrong"
+        });
 
-        // find user
+        // Find user and return if found
         const foundUser = await User.findOne({ $or: [{"username": user}, {"email": email}]});
-        if (foundUser) return res.status(403).send("Username or email is already taken.");
+        if (foundUser) return res.status(409).json({
+            "status": "error",
+            "message": "Duplication: the username or email is already taken"
+        });
 
-        return res.status(200).send("User data is valid");
+        return res.status(200).json({
+            "status": "success",
+            "message": "User's username and email are valid"
+        });
     }
     catch(err) {
-        return res.status(500).send("Error at registration validation endpoint : " + err);
+        // internal server error should be handle by backend. Not send to the frontend
+        console.error("Unexpected error at registration-validation endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at registration-validation endpoint"
+        });
     }
 };
 
 const registerUser = async (req, res) => {
     try {
-        const { user, email, pwd, title, firstName, lastName, address, phone, imgData} = req.body;
-        let imgUrl;
+        const { 
+            user,
+            email,
+            pwd,
+            title,
+            firstName,
+            lastName,
+            address,
+            phone,
+            imgData
+        } = req.body;
         
-        if (!user || !email || !pwd || !firstName || !lastName || !address || !phone) return res.status(400).send("Input is incompleted");
-        if (isNaN(title)) return res.status(400).send("Invalid title: must be enum of 0-3");
-
-        // change if imgData is anything other than a simple string
-        if (!imgData) imgUrl = "-";
+        // Check input's completeness
+        if (
+            !user ||
+            !email ||
+            !pwd ||
+            !firstName ||
+            !lastName ||
+            !address ||
+            !phone
+        ) return res.status(400).json({
+            "status": "error",
+            "message": "Incomplete input: user, email, pwd, firstName, lastName, address and phone are needed"
+        });
+        if (isNaN(title)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid enum: title must be enum of 0-3 only"
+        });
+        
+        // Change the imgUrl accordingly
+        let imgUrl;
+        if (imgData === undefined) imgUrl = "-";
         else imgUrl = imgData;
 
-        // data validation
-        if (!validateName(firstName)) return res.status(400).send("Invalid firstname: must contain only TH or EN alphabet");
-        if (!validateName(lastName)) return res.status(400).send("Invalid firstname: must contain only TH or EN alphabet");
-        if (!validatePhone(phone)) return res.status(400).send("Invalid phone number: must be number with length of 10");
+        // Input validation
+        if (!validateName(firstName)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid firstname: must contain only TH or EN alphabet"
+        });
+        if (!validateName(lastName)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid lastname: must contain only TH or EN alphabet"
+        });
+        if (!validatePhone(phone)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid phone number: must be a number with length of 10"
+        });
         
+        // Check data duplication
         const foundAccount = await Account.findOne({"phone": phone});
-        if (foundAccount) return res.status(403).send("Phone number is already in used");
+        if (foundAccount) return res.status(409).json({
+            "status": "error",
+            "message": "Duplication: phone number is already taken"
+        });
 
-        // capitalize english names
-        let formattedFirstName;
-        let formattedLastName; 
+        // Capitalize English names
+        let formattedFirstName, formattedLastName; 
         if (validateNameEN(firstName)) formattedFirstName = firstName[0].toUpperCase() + firstName.slice(1).toLowerCase();
         else formattedFirstName = firstName;
         if (validateNameEN(lastName)) formattedLastName = lastName[0].toUpperCase() + lastName.slice(1).toLowerCase();
         else formattedLastName = lastName;
 
+        // hash user's password
         const salt = await bcrypt.genSalt(10);
-        const hashPwd = await bcrypt.hash(pwd, salt); // hash/encrypt password for security reason
+        const hashPwd = await bcrypt.hash(pwd, salt);
         
-        // generate authentication tokens
-        
+        // Create new instance of User
         const newUser = new User({
             "email": email,
             "username": user,
@@ -65,13 +124,13 @@ const registerUser = async (req, res) => {
             "businessRoles": [],
             "refreshToken": ""
         });
-        if (!newUser) return res.status(500).send("Cannot create new User mongoDb document");
-        await newUser.save();
+        if (!newUser) return res.status(500).json({
+            "status": "error",
+            "message": "Cannot create new mongoDb document: new User can't be created"
+        });
         
+        // Create new Account
         const userID = newUser._id;
-        const accessToken = generateAccessToken(userID);
-        const refreshToken = generateRefreshToken(userID);
-
         const newAccount = new Account({
             "userID": userID,
             "title": title,
@@ -80,22 +139,42 @@ const registerUser = async (req, res) => {
             "phone": phone,
             "imgUrl": imgUrl
         });
-        if (!newAccount) return res.status(500).send("Cannot create new Account mongoDb document");
+        if (!newAccount) return res.status(500).json({
+            "status": "error",
+            "message": "Cannot create new mongoDb document: new Account can't be created"
+        });
+
+        // Saving both new Account and User
+        await newUser.save();
         await newAccount.save();
 
+        // Generate JWT
+        const accessToken = generateAccessToken(userID);
+        const refreshToken = generateRefreshToken(userID);
+
+        // Save newly generated refresh token to User
         newUser.refreshToken = refreshToken;
         await newUser.save();
 
-        // set respond cookie
+        // Set refresh token to cookie with maximum age of 1 day
         res.cookie("jwt", refreshToken, {
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000
         });
 
-        return res.status(200).json({ accessToken });
+        return res.status(201).json({
+            "status": "success",
+            "message": "New User and New Account created",
+            "access token": accessToken
+        });
     }
     catch(err) {
-        return res.status(500).send("Error at registration endpoint : " + err);
+        // internal server error should be handle by backend. Not send to the frontend
+        console.error("Unexpected error at registration endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at registration endpoint"
+        });
     }
 };
 

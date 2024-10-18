@@ -17,8 +17,10 @@ const verifyRole = async (req, res, next) => {
         businessBranch = "main";
     }
     const foundBusiness = await Business.findOne({ $and: [ {"name": businessName}, {"branch": businessBranch}] }).exec();
-    if (!foundBusiness) return res.status(401).send(`business:${businessName}, branch:${businessBranch} is not in the system`);
-    else console.log(`business:${businessName}, branch:${businessBranch} founded!`)
+    if (!foundBusiness) return res.status(401).json({
+        "status": "error",
+        "message": `business:${businessName}, branch:${businessBranch} is not in the system`
+    });
 
     // no need to check if user exist or not because JWT verification took care of it already
     let roleFounded = false;
@@ -32,7 +34,10 @@ const verifyRole = async (req, res, next) => {
     });
 
     // In case the user doesn't have any to do with business ID
-    if (!roleFounded) return res.status(403).send("User do not have a role in the business");
+    if (!roleFounded) return res.status(403).json({
+        "status": "error",
+        "message": "User do not have any role in the business"
+    });
 }
 
 module.exports = verifyRole;
