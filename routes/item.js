@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 const verifyJWT = require("../middlewares/verifyJWT");
 const verifyRole = require("../middlewares/checkBusinessRole");
-const { createItem } = require("../controllers/itemController");
+const { createItem, updateItem } = require("../controllers/itemController");
 
 /* 
 --------------------------------------------
@@ -34,3 +34,33 @@ router.post("/business/:businessID/item", verifyJWT, verifyRole, createItem);
 
 
 
+/* 
+--------------------------------------------
+PUT /business/:businessID/item/:itemID
+--------------------------------------------
+
+Detail: Update an item's details (cannot change itemType)
+        Only accessible by Admin and Accountant roles
+
+Input: {
+    "itemName": String,
+    "itemDescription": String,
+    "quantity": Number,
+    "unitType": String,
+    "imgData": String // optional
+}
+
+Outputs:  
+    Status 200 { message: "Item updated successfully", item: Object }
+    Status 400 "Input is incomplete" | "Item not found"
+    Status 401 Unauthorized (no token)
+    Status 403 Forbidden (insufficient permissions)
+    Status 500 Server error
+--------------------------------------------
+*/
+router.put(
+  "/business/:businessID/item/:itemID",
+  verifyJWT,
+  verifyRole,
+  updateItem
+);
