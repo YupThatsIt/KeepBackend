@@ -3,7 +3,11 @@ const express = require("express");
 const router = express.Router();
 const verifyJWT = require("../middlewares/verifyJWT");
 const verifyRole = require("../middlewares/checkBusinessRole");
-const { createItem, updateItem } = require("../controllers/itemController");
+const {
+  createItem,
+  updateItem,
+  deleteItem,
+} = require("../controllers/itemController");
 
 /* 
 --------------------------------------------
@@ -31,8 +35,6 @@ Outputs:
 --------------------------------------------
 */
 router.post("/business/:businessID/item", verifyJWT, verifyRole, createItem);
-
-
 
 /* 
 --------------------------------------------
@@ -63,4 +65,29 @@ router.put(
   verifyJWT,
   verifyRole,
   updateItem
+);
+
+/* 
+--------------------------------------------
+DELETE /business/:businessID/item/:itemID
+--------------------------------------------
+
+Detail: Delete an item from the business
+        Only accessible by Admin and Accountant roles
+
+Input: None (parameters in URL)
+
+Outputs:  
+    Status 200 { message: "Item deleted successfully" }
+    Status 401 Unauthorized (no token)
+    Status 403 Forbidden (insufficient permissions)
+    Status 404 Item not found
+    Status 500 Server error
+--------------------------------------------
+*/
+router.delete(
+  "/business/:businessID/item/:itemID",
+  verifyJWT,
+  verifyRole,
+  deleteItem
 );

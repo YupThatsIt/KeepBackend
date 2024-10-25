@@ -142,4 +142,37 @@ const updateItem = async (req, res) => {
   }
 };
 
-module.exports = { createItem, updateItem };
+const deleteItem = async (req, res) => {
+  try {
+    // Check if user has proper role (Admin or Accountant)
+    if (
+      req.role !== BusinessRole.BUSINESS_ADMIN &&
+      req.role !== BusinessRole.ACCOUNTANT
+    ) {
+      return res.status(403).send("Unauthorized: Insufficient permissions");
+    }
+
+    const { businessID, itemID } = req.params;
+
+    const Item = itemCreator(`items::${businessID}`);
+
+    // Find and delete the item
+    const deletedItem = await Item.findOneAndDelete({
+      _id: itemID,
+      businessID: businessID,
+    });
+
+    if (!deletedItem) {
+      return res.status(404).send("Item not found");
+    }
+
+    res.status(200).json({
+      message: "Item deleted successfully",
+    });
+  } catch (err) {
+    console.error("Error in deleteItem:", err);
+    res.status(500).send("Error deleting item: " + err.message);
+  }
+};
+
+module.exports = { createItem, updateItem, deleteItem };
