@@ -17,14 +17,13 @@ Input: {
     "itemName": String,
     "itemDescription": String,
     "itemType": Number, // Enum (PRODUCT, SERVICE)
-    "quantityOnHand": Number,
-    "quantityForInvoice": Number,
+    "quantity": Number,
     "unitType": String,
     "imgData": String // optional
 }
 
 Outputs:  
-    Status 201 "Item created successfully"
+    Status 201 { message: "Item created successfully", item: Object }
     Status 400 "Input is incomplete"
     Status 401 Unauthorized (no token)
     Status 403 Forbidden (insufficient permissions)
@@ -32,5 +31,3 @@ Outputs:
 --------------------------------------------
 */
 router.post("/business/:businessID/item", verifyJWT, verifyRole, createItem);
-
-module.exports = router;
