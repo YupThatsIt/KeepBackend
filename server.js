@@ -11,7 +11,7 @@ const PORT = 8000 || process.env.port;
 const app = express();
 
 // built-in middleware to handle urlencoded form data
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false}));
 
 // built-in middleware for json
 app.use(express.json());
@@ -25,20 +25,20 @@ app.use(fileUpload());
 
 app.use(bodyParser.json());
 
+
 // database connection
 const connectDB = require("./config/databaseConfig.js");
 connectDB();
 
-// to read
-readdirSync("./routes").map((filename) => {
-  app.use(require("./routes/" + filename), (err, req, res, next) => {
-    console.error(err.stack);
-    res
-      .status(500)
-      .send(`${filename} : something's wrong in this file. Fix it`);
-  });
+
+// to read 
+readdirSync('./routes').map((filename) => {
+    app.use(require("./routes/" + filename), (err, req, res, next) => {
+        console.error(err.stack);
+        res.status(500).send(`${filename} : something's wrong in this file. Fix it`);  
+    });
 });
 
 app.listen(PORT, () => {
-  console.log("App is listening at http://localhost:" + PORT);
+    console.log("App is listening at http://localhost:" + PORT);
 });
