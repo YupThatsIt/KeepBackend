@@ -175,4 +175,48 @@ const deleteItem = async (req, res) => {
   }
 };
 
-module.exports = { createItem, updateItem, deleteItem };
+const getItemsByType = async (req, res) => {
+  try {
+    const { businessID } = req.params;
+    const { type } = req.query;
+
+    // Validate type parameter
+    if (!type || !["product", "service", "all"].includes(type.toLowerCase())) {
+      return res
+        .status(400)
+        .send("Invalid type parameter. Must be 'product', 'service', or 'all'");
+    }
+
+    const Item = itemCreator(`items::${businessID}`);
+
+    // Build query
+    let query = { businessID: businessID };
+
+    // Add type filter if not 'all'
+    if (type.toLowerCase() !== "all") {
+      const itemType =
+        type.toLowerCase() === "product" ? ItemType.PRODUCT : ItemType.SERVICE;
+      query.itemType = itemType;
+    }
+
+    // Get items
+    const items = await Item.find(query);
+
+    // Format the response
+    const formattedItems = items.map((item) => ({
+      id: item._id,
+      itemName: item.itemName,
+      itemDescription: item.itemDescription,
+      itemType: item.itemType,
+      quantity: item.quantityOnHand,
+      unitType: item.unitType,
+      imgUrl: item.imgUrl,
+    }));
+
+    res.status(200).json({ items: formattedItems });
+  } catch (err) {
+    console.error("Error in getItemsByType:", err);
+    res.status(500).send("Error retrieving items: " + err.message);
+  }
+};
+module.exports = { createItem, updateItem, deleteItem, getItemsByType };

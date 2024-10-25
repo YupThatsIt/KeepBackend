@@ -7,6 +7,7 @@ const {
   createItem,
   updateItem,
   deleteItem,
+  getItemsByType,
 } = require("../controllers/itemController");
 
 /* 
@@ -91,5 +92,46 @@ router.delete(
   verifyRole,
   deleteItem
 );
+
+/* 
+--------------------------------------------
+GET /business/:businessID/item?type={type}
+--------------------------------------------
+
+Detail: Get items filtered by type
+        type can be 'product', 'service', or 'all'
+
+Query Parameters:
+    type: String ('product', 'service', or 'all')
+
+Outputs:  
+    Status 200 { items: Array of item objects }
+    Status 400 Invalid type parameter
+    Status 401 Unauthorized (no token)
+    Status 403 Forbidden (insufficient permissions)
+    Status 500 Server error
+--------------------------------------------
+*/
+
+/* 
+--------------------------------------------
+GET /business/:businessID/item?type={type}
+--------------------------------------------
+
+Detail: Get items filtered by type
+        type can be 'product', 'service', or 'all'
+
+Query Parameters:
+    type: String ('product', 'service', or 'all')
+
+Outputs:  
+    Status 200 { items: Array of item objects }
+    Status 400 Invalid type parameter
+    Status 401 Unauthorized (no token)
+    Status 403 Forbidden (insufficient permissions)
+    Status 500 Server error
+--------------------------------------------
+*/
+router.get("/business/:businessID/item", verifyJWT, verifyRole, getItemsByType);
 
 module.exports = router;
