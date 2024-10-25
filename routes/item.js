@@ -8,6 +8,8 @@ const {
   updateItem,
   deleteItem,
   getItemsByType,
+  getItemById,
+  updateItemQuantity,
 } = require("../controllers/itemController");
 
 /* 
@@ -133,5 +135,48 @@ Outputs:
 --------------------------------------------
 */
 router.get("/business/:businessID/item", verifyJWT, verifyRole, getItemsByType);
+
+/* 
+--------------------------------------------
+GET /business/:businessID/item/:itemID
+--------------------------------------------
+
+Detail: Get details of a specific item by its ID
+--------------------------------------------
+*/
+router.get(
+  "/business/:businessID/item/:itemID",
+  verifyJWT,
+  verifyRole,
+  getItemById
+);
+
+/* 
+--------------------------------------------
+PUT /business/:businessID/item/:itemID/quantity
+--------------------------------------------
+
+Detail: Update only the quantity of a specific item
+        Only accessible by Admin and Accountant roles
+
+Input: {
+    "quantity": Number
+}
+
+Outputs:  
+    Status 200 { message: "Item quantity updated successfully", item: Object }
+    Status 400 Invalid quantity
+    Status 401 Unauthorized (no token)
+    Status 403 Forbidden (insufficient permissions)
+    Status 404 Item not found
+    Status 500 Server error
+--------------------------------------------
+*/
+router.put(
+  "/business/:businessID/item/:itemID/quantity",
+  verifyJWT,
+  verifyRole,
+  updateItemQuantity
+);
 
 module.exports = router;

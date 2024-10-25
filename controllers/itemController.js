@@ -219,4 +219,91 @@ const getItemsByType = async (req, res) => {
     res.status(500).send("Error retrieving items: " + err.message);
   }
 };
-module.exports = { createItem, updateItem, deleteItem, getItemsByType };
+
+const getItemById = async (req, res) => {
+  try {
+    const { businessID, itemID } = req.params;
+
+    const Item = itemCreator(`items::${businessID}`);
+
+    const item = await Item.findOne({
+      _id: itemID,
+      businessID: businessID,
+    });
+
+    if (!item) {
+      return res.status(404).send("Item not found");
+    }
+
+    // Format the response
+    const formattedItem = {
+      id: item._id,
+      itemName: item.itemName,
+      itemDescription: item.itemDescription,
+      itemType: item.itemType,
+      quantity: item.quantityOnHand,
+      unitType: item.unitType,
+      imgUrl: item.imgUrl,
+    };
+
+    res.status(200).json({ item: formattedItem });
+  } catch (err) {
+    console.error("Error in getItemById:", err);
+    res.status(500).send("Error retrieving item: " + err.message);
+  }
+};
+
+const updateItemQuantity = async (req, res) => {
+  try {
+    // Check if user has proper role (Admin or Accountant)
+    if (
+      req.role !== BusinessRole.BUSINESS_ADMIN &&
+      req.role !== BusinessRole.ACCOUNTANT
+    ) {
+      return res.status(403).send("Unauthorized: Insufficient permissions");
+    }
+
+    const { businessID, itemID } = req.params;
+    const { quantity } = req.body;
+
+    // Validate quantity
+    if (quantity === undefined || quantity < 0) {
+      return res
+        .status(400)
+        .send("Invalid quantity: must be a non-negative number");
+    }
+
+    const Item = itemCreator(`items::${businessID}`);
+
+    // Find and update the item
+    const updatedItem = await Item.findOneAndUpdate(
+      {
+        _id: itemID,
+        businessID: businessID,
+      },
+      {
+        quantityOnHand: quantity,
+        quantityForInvoice: quantity,
+      }
+    );
+
+    if (!updatedItem) {
+      return res.status(404).send("Item not found");
+    }
+
+    // Just return success message
+    res.status(200).send("Item quantity updated successfully");
+  } catch (err) {
+    console.error("Error in updateItemQuantity:", err);
+    res.status(500).send("Error updating item quantity: " + err.message);
+  }
+};
+
+module.exports = {
+  createItem,
+  updateItem,
+  deleteItem,
+  getItemsByType,
+  getItemById,
+  updateItemQuantity,
+};
