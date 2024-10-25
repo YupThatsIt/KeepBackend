@@ -91,3 +91,5 @@ router.delete(
   verifyRole,
   deleteItem
 );
+
+module.exports = router;
