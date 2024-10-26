@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { viewUser, updateUser, deleteUser } = require("../controllers/userController");
-const { validatePassword, updatePassword } = require("../controllers/userPasswordController");
+const { checkPassword, updatePassword } = require("../controllers/userPasswordController");
 const verifyJWT = require("../middlewares/verifyJWT");
 
 /* 
@@ -69,22 +69,50 @@ router.put("/user", verifyJWT, updateUser);
 DELETE /user
 --------------------------------------------
 
-Detail: 1. Check user ID
-        2. Delete the user from any business they are in but won't if the user is an admin
-        3. Delete the user
-
-
-NOTE: access token is useless at this point. so take care to 
+Detail: 1. Delete the user and account related to it
 
 Input ->    None (user id in the access key)
 
 Outputs ->  Status 200 -> user deleted
-            Status 400 -> input is incorrect
-            Status 401 -> no access token
             Status 403 -> you are an admin
-            Status 403 -> can't get the info
 --------------------------------------------
 */ 
 router.delete("/user", verifyJWT, deleteUser);
+
+/* 
+--------------------------------------------
+POST /user/password-check
+--------------------------------------------
+
+Detail: Check if input password match the user's
+
+Input -> {
+                "pwd": String
+         };
+
+Outputs ->  Status 200 -> user deleted
+            Status 400 -> input is incorrect
+            Status 403 -> incorrect password
+--------------------------------------------
+*/ 
+router.post("/user/password/check", verifyJWT, checkPassword);
+
+/* 
+--------------------------------------------
+PUT /user/password
+--------------------------------------------
+
+Detail: Update the pwd to new password
+
+Input -> {
+                "pwd": String
+         };
+
+Outputs ->  Status 200 -> password updated
+            Status 400 -> input is incorrect
+            Status 500 -> can't update the password
+--------------------------------------------
+*/ 
+router.put("/user/password", verifyJWT, updatePassword);
 
 module.exports = router;

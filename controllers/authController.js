@@ -47,7 +47,7 @@ const login = async (req, res) => {
             res.status(200).json({ 
                 "status": "success",
                 "message": `User ${foundUser.username} logged in`,
-                "access token": accessToken
+                "content": accessToken
             });
         }
         else {
@@ -71,7 +71,7 @@ const logout = async (req, res) =>{
     try {
         // in case that there is no refresh token in the cookie
         const cookies = req.cookies;
-        if (!cookies?.jwt) return res.status(204).json({
+        if (!cookies?.jwt) return res.status(200).json({
             "status": "success",
             "message": "No jwt header in cookie"
         });
@@ -81,7 +81,7 @@ const logout = async (req, res) =>{
         const foundUser = await User.findOne({"refreshToken": refreshToken});
         if (!foundUser){
             res.clearCookie("jwt", { httpOnly: true});
-            return res.status(204).json({
+            return res.status(200).json({
                 "status": "success",
                 "message": "User is deleted"
             });
@@ -90,7 +90,7 @@ const logout = async (req, res) =>{
         foundUser.refreshToken = "";
         await foundUser.save();
         res.clearCookie("jwt", { httpOnly: true}); // add secure: true to make it https
-        res.sendStatus(204).json({
+        res.status(200).json({
             "status": "success",
             "message": `User ${foundUser.username} logged out`
         });
@@ -132,7 +132,7 @@ const handleRefreshToken = async (req, res) => {
                 res.json({
                     "status": "success",
                     "message": "Access token refreshed",
-                    "access token": accessToken
+                    "content": accessToken
                 });
             }
         );

@@ -80,9 +80,7 @@ const registerUser = async (req, res) => {
         });
         
         // Change the imgUrl accordingly
-        let imgUrl;
-        if (imgData === undefined) imgUrl = "-";
-        else imgUrl = imgData;
+        const imgUrl = (imgData) ? imgData : "-";
 
         // Input validation
         if (!validateName(firstName)) return res.status(400).json({
@@ -106,11 +104,8 @@ const registerUser = async (req, res) => {
         });
 
         // Capitalize English names
-        let formattedFirstName, formattedLastName; 
-        if (validateNameEN(firstName)) formattedFirstName = firstName[0].toUpperCase() + firstName.slice(1).toLowerCase();
-        else formattedFirstName = firstName;
-        if (validateNameEN(lastName)) formattedLastName = lastName[0].toUpperCase() + lastName.slice(1).toLowerCase();
-        else formattedLastName = lastName;
+        const formattedFirstName = (validateNameEN(firstName)) ? firstName[0].toUpperCase() + firstName.slice(1).toLowerCase() : firstName;
+        const formattedLastName = (validateNameEN(lastName)) ? lastName[0].toUpperCase() + lastName.slice(1).toLowerCase() : lastName;
 
         // hash user's password
         const salt = await bcrypt.genSalt(10);

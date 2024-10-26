@@ -14,7 +14,7 @@ Input ->    {
                 "pwd": String,
             }
 
-Outputs ->  Status 200 { "access token": accessToken }
+Outputs ->  Status 200 { "content": accessToken }
             Status 400 "Incomplete input: user and pwd are needed"
             Status 401 "User is not in the system"
             Status 401 "Password is incorrect"
@@ -49,7 +49,7 @@ Detail: Generate new access token from refresh token
 
 Input -> have refresh token in the cookie
 
-Outputs ->  Status 200 { "access token": accessToken }
+Outputs ->  Status 200 { "content": accessToken }
             Status 401 "Unauthorized"
 --------------------------------------------
 */ 

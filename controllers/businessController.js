@@ -7,35 +7,58 @@ const mongoose = require("mongoose");
 
 const createBusiness = async(req, res) =>{
     try{
-        const { name, branch, address, phone, taxID, logoData} = req.body;
-        let logoUrl;
-        let branchName = "main";
-
-        // check input
-        if (!name || !address || !phone || !taxID) return res.status(400).send("Input is incompleted");
-        if (branch) branchName = branch;
-
+        const {
+            name,
+            branch,
+            address,
+            phone,
+            taxID,
+            logoData
+        } = req.body;
+        
+        // check for necessary input
+        if (!name ||
+            !address ||
+            !phone ||
+            !taxID
+        ) return res.status(400).json({
+            "status": "error",
+            "message": "Input is incompleted"
+        });
+        
         // change if imgData is anything other than a simple string
-        if (!logoData) logoUrl = "-";
-        else logoUrl = imgData;
+        const logoUrl = (logoData) ? logoData : "-";
+        const branchName = (branch) ? branch : "main";
 
         // validate input
-        if (!validatePhone(phone)) return res.status(400).send("Invalid phone number: must be number with length of 10");
-        if (!validateTaxID(taxID)) return res.status(400).send("Invalid tax ID: must be number with length of 13");
+        if (!validatePhone(phone)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid phone number: must be number with length of 10"
+        });
+        if (!validateTaxID(taxID)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid tax ID: must be number with length of 13"
+        });
 
         // check duplication
         const foundBusiness = await Business.findOne({ $or: [{"phone": phone}, 
-                                                            {"taxID": taxID}, 
                                                             {"address": address},
-                                                            {$and: [{"name": name}, {"branch": branchName}]}]});
-        if (foundBusiness) return res.status(403).send("There's registered information already");
+                                                            {$and: [{"name": name}, {"branch": branchName}]}
+                                                            // {$and: [{"name": name}, {"branch" : {$ne: branchName}}, { "taxID" : {$ne: taxID}}]},
+                                                            // {$and: [{"name": {$ne: name}}, {"taxID": taxID}]}
+                                                        ]});
+        if (foundBusiness) return res.status(403).json({
+            "status": "error",
+            "message": "Duplicated data: phone, taxID, address is taken/this branch of business already exist"
+        });
         
         // find the user to add id as admin
-        // const userID = req.userID;
-        console.log(req.userID);
         const userID = mongoose.Types.ObjectId.createFromHexString(req.userID);
         const foundUser = await User.findOne({"_id": userID});
-        if (!foundUser) return res.status(403).send("No user found");
+        if (!foundUser) return res.status(403).json({
+            "status": "error",
+            "message": "The user is not found"
+        });
         
         // create business
         const newBusiness = new Business({
@@ -53,10 +76,14 @@ const createBusiness = async(req, res) =>{
             "joiningCode": "",
             "logoUrl": logoUrl
         });
-        if (!newBusiness) return res.status(500).send("Cannot create new Business mongoDb document");
+        if (!newBusiness) return res.status(500).json({
+            "status": "error",
+            "message": "Cannot create new mongoDb document: new Business can't be created"
+        });
         await newBusiness.save();
         
         // update user with the role
+        // maybe atomic will be better but this much is fine
         const businessID = newBusiness._id;
         foundUser.businessRoles.push({
             businessID: businessID,
@@ -64,16 +91,22 @@ const createBusiness = async(req, res) =>{
         })
         await foundUser.save();
 
-        // return the business name and branch
-        const encodedName = encodeURI(name);
-        const encodedBranch = encodeURI(branchName);
-        res.json({
-            "name": encodedName,
-            "branch": encodedBranch
+        // return the encoded business name and branch
+        res.status(201).json({
+            "status": "success",
+            "message": "New business created",
+            "content" : {
+                "name": encodeURI(name),
+                "branch": encodeURI(branchName)
+            }
         });
     }
     catch(err){
-        res.status(500).send("Error at create business endpoint : " + err);
+        console.error("Unexpected error at create business endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at create business endpoint"
+        });
     }
 };
 
@@ -82,7 +115,10 @@ const getBusinesses = async (req, res) => {
     try {
         const userID = mongoose.Types.ObjectId.createFromHexString(req.userID);
         const foundUser = await User.findOne({ "_id": userID });
-        if (!foundUser) return res.status(403).send("No user is found");
+        if (!foundUser) return res.status(403).json({
+            "status": "error",
+            "message": "No user is found"
+        });
 
         const returnData = [];
         for (const business of foundUser.businessRoles) {
@@ -95,10 +131,18 @@ const getBusinesses = async (req, res) => {
             });
         }
         
-        res.json(returnData);
+        res.status(200).json({
+            "status": "success",
+            "message": `Return businesses which ${foundUser.username} has a role in successfully`,
+            "content": returnData
+        });
     }
     catch(err){
-        res.status(500).send("Error at get businesses endpoint : " + err);
+        console.error("Unexpected error at get business endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at get business endpoint"
+        });
     }
 };
 
@@ -119,10 +163,18 @@ const viewBusiness = async (req, res) => {
             "logoUrl": foundBusiness.logoUrl
         };
 
-        res.json(returnData);
+        res.status(200).json({
+            "status": "success",
+            "message": "Return business detail successfully",
+            "content": returnData
+        });
     }
     catch(err){
-        res.status(500).send("Error at view businesses endpoint : " + err);
+        console.error("Unexpected error at view business endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at view business endpoint"
+        });
     }
 };
 
@@ -130,34 +182,53 @@ const viewBusiness = async (req, res) => {
 const updateBusiness = async (req, res) => {
     try {
         // check role
-        if (req.role !== BusinessRole.BUSINESS_ADMIN) return res.sendStatus(403);
+        if (req.role !== BusinessRole.BUSINESS_ADMIN) return res.status(403).json({
+            "status": "error",
+            "message": "User is not the admin"
+        });
         const businessID = req.businessID;
 
-        const { name, branch, address, phone, logoData} = req.body;
-        let logoUrl;
-        let branchName = "main";
-
+        const {
+            name,
+            branch,
+            address,
+            phone,
+            logoData
+        } = req.body;
+        
         // check input
-        if (!name || !address || !phone) return res.status(400).send("Input is incompleted");
-        if (branch) branchName = branch;
-
+        if (!name ||
+            !address ||
+            !phone
+        ) return res.status(400).json({
+            "status": "error",
+            "message": "Input is incomplete: name, address and phone are needed"
+        });
+        
         // change if imgData is anything other than a simple string
-        if (!logoData) logoUrl = "-";
-        else logoUrl = imgData;
+        const branchName = (branch) ? branch : "main";
+        const logoUrl = (logoData) ? logoData : "-";
 
-        if (!validatePhone(phone)) return res.status(400).send("Invalid phone number: must be number with length of 10");
+        if (!validatePhone(phone)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid phone number: must be number with length of 10"
+        });
 
         const foundBusiness = await Business.findOne({ $and: 
                                                         [{$or: [{"phone": phone}, 
                                                                 {"address": address},
                                                                 {$and: [{"name": name}, {"branch": branchName}]}
+                                                                // {$and: [{"name": name}, {"branch" : {$ne: branchName}}, { "taxID" : {$ne: taxID}}]},
+                                                                // {$and: [{"name": {$ne: name}}, {"taxID": taxID}]}
                                                          ]},
                                                          {
                                                             "_id": {$ne: businessID}
                                                          }]});
-        if (foundBusiness) return res.status(403).send("There's registered information already");
+        if (foundBusiness) return res.status(403).json({
+            "status": "error",
+            "message": "Duplicated data: phone, taxID, address is taken/this branch of business already exist"
+        });
 
-        let updateErr = false;
         await Business.findOneAndUpdate({ "_id": businessID }, {
             "name": name,
             "branch": branchName,
@@ -169,23 +240,38 @@ const updateBusiness = async (req, res) => {
                 console.log("Updated User : ", docs);
             }
             catch(err) {
-                updateErr = true;
-                return;
+                console.log(err);
+                return res.status(500).json({
+                    "status": "error",
+                    "message": "Business information cannot be updated"
+                });
             }
         });
-        if (updateErr) res.status(500).send("Business information cannot be updated");
 
-        res.status(200).send("Business updated!");
+        return res.status(200).json({
+            "status": "success",
+            "message": "Business updated"
+        });
     }
     catch(err){
-        res.status(500).send("Error at update businesses endpoint : " + err);
+        console.error("Unexpected error at update business endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at update business endpoint"
+        });
     }
 };
 
 
 const deleteBusiness = async (req, res) => {
     try {
-
+        // why can't I still not do this
+        if (req.role !== BusinessRole.BUSINESS_ADMIN) return res.status(403).json({
+            "status": "error",
+            "message": "User is not the admin"
+        });
+        const businessID = req.businessID;
+        // because we must destroy everything include all related collections
     }
     catch(err){
         res.status(500).send("Error at delete businesses endpoint : " + err);

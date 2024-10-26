@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const verifyJWT = require("../middlewares/verifyJWT");
 const verifyRole = require("../middlewares/checkBusinessRole");
-const { createContact, getContacts } = require("../controllers/contactController");
+const { createContact, getContacts, viewContact, updateContact, deleteContact } = require("../controllers/contactController");
 
 /* 
 --------------------------------------------
@@ -38,5 +38,11 @@ Outputs ->  Status 200 "Contact created"
 router.post("/business/:businessName/contact", verifyJWT, verifyRole, createContact);
 
 router.get("/business/:businessName/contacts", verifyJWT, verifyRole, getContacts);
+
+router.get("/business/:businessName/contact/:contactID", verifyJWT, verifyRole, viewContact);
+
+router.put("/business/:businessName/contact/:contactID", verifyJWT, verifyRole, updateContact);
+
+router.delete("/business/:businessName/contact/:contactID", verifyJWT, verifyRole, deleteContact);
 
 module.exports = router;

@@ -21,7 +21,6 @@ const businessSchema = new mongoose.Schema({
     taxID: {
         type: String,
         required: true,
-        unique: true
     },
     admin: {
         userID: {
