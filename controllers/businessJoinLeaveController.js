@@ -7,10 +7,13 @@ const newMemberNumber = require("../utils/newMemberIdGenerator");
 
 const generateJoinCode = async (req, res) => {
     try {
-        if (req.role !== BusinessRole.BUSINESS_ADMIN) return res.sendStatus(403);
+        if (req.role !== BusinessRole.BUSINESS_ADMIN) return res.status(403).json({
+            "status": "error",
+            "message": "User is not the admin"
+        });
         const businessID = req.businessID;
 
-        // check if code is duplicated
+        // check if code is duplicated, which include the last one too
         let randomCode;
         do {
             randomCode = crypto.randomBytes(3).toString("hex");
@@ -23,7 +26,6 @@ const generateJoinCode = async (req, res) => {
         const expireTime = new Date(now.getTime() + (expireDurationMinute * 60 * 1000));
         console.log(expireTime.toString());
 
-        let updateErr = false;
         await Business.findOneAndUpdate({ "_id": businessID }, {
             "joiningCode.code": randomCode,
             "joiningCode.codeExpireAt": expireTime
@@ -32,20 +34,30 @@ const generateJoinCode = async (req, res) => {
                 console.log("Updated User : ", docs);
             }
             catch(err) {
-                updateErr = true;
-                return;
+                console.log(err);
+                return res.status(500).json({
+                    "status": "error",
+                    "message": "Joining code cannot be updated"
+                });
             }
         });
-        if (updateErr) return res.status(500).send("Joining code cannot be updated");
 
         const returnData = {
             "joinCode": randomCode,
             "expireAt": expireTime
         }
-        res.status(200).json(returnData);
+        res.status(200).json({
+            "status": "success",
+            "message": "Join code generated",
+            "content": returnData
+        });
     }
     catch(err){
-        res.status(500).send("Error at generate join code endpoint : " + err);
+        console.error("Unexpected error at generate business code endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at generate business code endpoint"
+        });
     }
 };
 
@@ -54,13 +66,19 @@ const joinBusiness = async (req, res) => {
     try {
         // get the joining code
         const joinCode = req.body.joinCode;
-        if (!joinCode) return res.status(403).send("No join code provided");
+        if (!joinCode) return res.status(403).json({
+            "status": "error",
+            "message": "No join code provided"
+        });
         const userID = mongoose.Types.ObjectId.createFromHexString(req.userID);
 
         // check if it expired
         const now = new Date();
         const foundBusiness = await Business.findOne({ "joiningCode.code": joinCode});
-        if (!foundBusiness) return res.status(403).send("Code is incorrect");
+        if (!foundBusiness) return res.status(403).json({
+            "status": "error",
+            "message": "Code is incorrect"
+        });
         if (foundBusiness.joiningCode.codeExpireAt.getTime() < now.getTime()) return res.status(403).send("Code is expired");
 
         const foundUser = await User.findOne({ "_id": userID });
@@ -69,7 +87,10 @@ const joinBusiness = async (req, res) => {
         // check if user is already joined
         if (foundUser.businessRoles.find((element) => {
             return element.businessID.equals(businessID);
-        })) return res.status(200).send("User already joined the business");
+        })) return res.status(200).json({
+            "status": "success",
+            "message": "User is already in the business"
+        });
 
         // update Business
         // generate new member number which is lowest possible number in the sequence
@@ -98,15 +119,22 @@ const joinBusiness = async (req, res) => {
         await foundUser.save();
 
         // return the business name and branch
-        const encodedName = encodeURI(foundBusiness.name);
-        const encodedBranch = encodeURI(foundBusiness.branch);
-        res.json({
-            "name": encodedName,
-            "branch": encodedBranch
+        const returnData = {
+            "name": encodeURI(foundBusiness.name),
+            "branch": encodeURI(foundBusiness.branch)
+        }
+        res.status(200).json({
+            "status": "success",
+            "message": "Joined the business",
+            "content": returnData
         });
     }
     catch(err){
-        res.status(500).send("Error at join business endpoint : " + err);
+        console.error("Unexpected error at join business code endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at join business code endpoint"
+        });
     }
 };
 
@@ -114,19 +142,22 @@ const joinBusiness = async (req, res) => {
 const leaveBusiness = async (req, res) => {
     try {
         // check if admin, return if true: no admin should be able to leave the business yet
-        if (req.role === BusinessRole.BUSINESS_ADMIN) return res.status(403).send("Admin cannot leave the business");
+        if (req.role === BusinessRole.BUSINESS_ADMIN) res.status(403).json({
+            "status": "error",
+            "message": "Admin cannot leave the business"
+        });
         const userID = mongoose.Types.ObjectId.createFromHexString(req.userID);
         const businessID = req.businessID;
 
         // find business
         const foundBusiness = await Business.findOne({ "_id": businessID });
-        if (!foundBusiness) return res.status(403).send("Business not found");
+        if (!foundBusiness) return res.status(403).json({
+            "status": "error",
+            "message": "Business is not found"
+        });
 
         // delete id in Business
-        let updateErr = false;
-        let role;
-        if (req.role === BusinessRole.ACCOUNTANT) role = "accountants";
-        else role = "viewers";
+        const role = (req.role === BusinessRole.ACCOUNTANT) ? "accountants" : "viewers";
         await Business.findOneAndUpdate({ "_id": businessID } ,{
             $pull: { 
                 [role]: { "userID": userID }
@@ -136,11 +167,13 @@ const leaveBusiness = async (req, res) => {
                 console.log("Updated Business : ", docs);
             }
             catch(err) {
-                updateErr = true;
-                return;
+                console.log(err);
+                return res.status(500).json({
+                    "status": "error",
+                    "message": "Cannot delete user from business"
+                });
             }
         });
-        if (updateErr) return res.status(500).send("Cannot delete user from business");
 
         // delete role in User
         await User.findOneAndUpdate({ "_id": userID }, {
@@ -152,16 +185,24 @@ const leaveBusiness = async (req, res) => {
                 console.log("Updated User : ", docs);
             }
             catch(err) {
-                updateErr = true;
-                return;
+                return res.status(500).json({
+                    "status": "error",
+                    "message": "Cannot delete business from user"
+                });
             }
         });
-        if (updateErr) return res.status(500).send("Cannot delete business from user");
 
-        res.status(200).send("Leave business success");
+        res.status(200).json({
+            "status": "success",
+            "message": "Leave the business successfully"
+        });
     }
     catch(err){
-        res.status(500).send("Error at leave business endpoint : " + err);
+        console.error("Unexpected error at leave business code endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at leave business code endpoint"
+        });
     }
 }
 

@@ -7,21 +7,17 @@ const { login, logout, handleRefreshToken } = require("../controllers/authContro
 POST /user/login
 --------------------------------------------
 
-Detail: 1. check if the input user or email exists
-        2. check if the password is correct
-        3. keep the refresh token in the User mongoDb document
-        4. return refresh token in cookie with key "jwt"
-        5. return JSON with access token as the key
+Detail: Login with username/email and password. Will save refresh token in cookie and return newly generated access token
 
 Input ->    {
                 "user": String, (can be username or email)
                 "pwd": String,
             }
 
-Outputs ->  Status 200 { accessToken: String }
-            Status 400
-            Status 401
-            Status 500
+Outputs ->  Status 200 { "content": accessToken }
+            Status 400 "Incomplete input: user and pwd are needed"
+            Status 401 "User is not in the system"
+            Status 401 "Password is incorrect"
 --------------------------------------------
 */ 
 router.post("/user/login", login);
@@ -31,7 +27,7 @@ router.post("/user/login", login);
 POST /user/logout
 --------------------------------------------
 
-Detail: 1
+Detail: Delete refresh token in cookie and database
 
 NOTE:   access token cannot be delete by backend (not that I knew of)
         please make sure to drop it because of the stateless nature of jwt
@@ -40,26 +36,21 @@ NOTE:   access token cannot be delete by backend (not that I knew of)
 Input ->  Nothing
 
 Outputs ->  Status 204
-            Status 403
-            Status 500
 --------------------------------------------
 */ 
-router.get("/user/logout",  logout); // don't need to verify jwt to logout
+router.post("/user/logout", logout); // don't need to verify jwt to logout
 
 /* 
 --------------------------------------------
 GET /access-token-refreshment
 --------------------------------------------
 
-Detail: 1. get refresh token from the cookie
-        2. check if the refresh token from the cookie match the database
-        3. if match then return a new access token with renew expiration
+Detail: Generate new access token from refresh token
 
 Input -> have refresh token in the cookie
 
-Outputs ->  Status 200 { accessToken: String }
-            Status 204 (if refresh token is not in the cookie)
-            Status 500
+Outputs ->  Status 200 { "content": accessToken }
+            Status 401 "Unauthorized"
 --------------------------------------------
 */ 
 router.get("/access-token-refreshment", handleRefreshToken);

@@ -4,44 +4,82 @@ const { validateEmail, validatePhone, validateTaxID, validateNameEN, validateNam
 
 const createContact = async(req, res) =>{
     try {
-        // check role
-        if (req.role !== BusinessRole.BUSINESS_ADMIN && req.role !== BusinessRole.ACCOUNTANT) return res.sendStatus(403);
+        // check role, better this way for clarity
+        if (req.role !== BusinessRole.BUSINESS_ADMIN && req.role !== BusinessRole.ACCOUNTANT) return res.status(403).json({
+            "status": "error",
+            "message": "User is not the admin nor an accountant"
+        });
 
         // get specific contact model, there will be many according to business
         const Contact = contactCreator(`contacts::${req.businessID}`);
 
         // get data passed in through request
-        const { type, title, firstName, lastName, phone, address, email, taxID, imgData} = req.body;
-        let { contactBusinessName } = req.body;
-        let imgUrl;
-
-        // check if the input is complete
-        if (!firstName || !lastName || !phone || !address || !email || !taxID) return res.status(400).send("Input is incomplete");
-        if (!contactBusinessName) contactBusinessName = "-";
+        const {
+            type,
+            title,
+            firstName,
+            lastName,
+            phone,
+            address,
+            email,
+            taxID,
+            imgData
+        } = req.body;
         
-        // change if imgData is anything other than a simple string
-        if (!imgData) imgUrl = "-";
-        else imgUrl = imgData;
+        // check if the input is complete
+        if (!firstName ||
+            !lastName ||
+            !phone ||
+            !address ||
+            !email ||
+            !taxID
+        ) return res.status(400).json({
+            "status": "error",
+            "message": "Incomplete input: firstName, lastName, phone, address, email and taxID are needed"
+        });
+        const contactBusinessName = (req.contactBusinessName) ? req.contactBusinessName : "-";
+        const imgUrl = (!imgData) ? "-" : imgData;
         
         // validate input
-        if (!validateName(firstName)) return res.status(400).send("Invalid firstname: must contain only TH or EN alphabet");
-        if (!validateName(lastName)) return res.status(400).send("Invalid firstname: must contain only TH or EN alphabet");
-        if (!validatePhone(phone)) return res.status(400).send("Invalid phone number: must be number with length of 10");
-        if (!validateTaxID(taxID)) return res.status(400).send("Invalid tax ID: must be number with length of 13");
-        if (!validateEmail(email)) return res.status(400).send("Invalid email");
-        if (isNaN(type)) return res.status(400).send("Invalid title: must be enum of 0-1");
-        if (isNaN(title)) return res.status(400).send("Invalid title: must be enum of 0-3");
+        if (!validateName(firstName)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid firstname: must contain only TH or EN alphabet"
+        });
+        if (!validateName(lastName)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid firstname: must contain only TH or EN alphabet"
+        });
+        if (!validatePhone(phone)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid phone number: must be number with length of 10"
+        });
+        if (!validateTaxID(taxID)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid tax ID: must be number with length of 13"
+        });
+        if (!validateEmail(email)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid email"
+        });
+        if (isNaN(type)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid title: must be enum of 0-1"
+        });
+        if (isNaN(title)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid title: must be enum of 0-3"
+        });
 
         // check for duplicated information
         const foundContact = await Contact.findOne({ $or: [{"phone": phone}, {"email": email}]});
-        if (foundContact) return res.send(403).send("Phone or email is already taken");
+        if (foundContact) return res.send(403).json({
+            "status": "error",
+            "message": "Phone or email is already taken"
+        });
 
-        let formattedFirstName;
-        let formattedLastName; 
-        if (validateNameEN(firstName)) formattedFirstName = firstName[0].toUpperCase() + firstName.slice(1).toLowerCase();
-        else formattedFirstName = firstName;
-        if (validateNameEN(lastName)) formattedLastName = lastName[0].toUpperCase() + lastName.slice(1).toLowerCase();
-        else formattedLastName = lastName;
+        // formatting name
+        const formattedFirstName = (validateNameEN(firstName)) ? firstName[0].toUpperCase() + firstName.slice(1).toLowerCase() : firstName;
+        const formattedLastName = (validateNameEN(lastName)) ? lastName[0].toUpperCase() + lastName.slice(1).toLowerCase() : lastName;
 
         // create new contact
         const newContact = new Contact({
@@ -57,13 +95,23 @@ const createContact = async(req, res) =>{
             "taxID": taxID,
             "imgUrl": imgUrl,
         });
-        if (!newContact) return res.status(500).send("Cannot create new Contact mongoDb document");
+        if (!newContact) return res.status(500).json({
+            "status": "error",
+            "message": "Cannot create new Contact mongoDb document"
+        });
         await newContact.save();
 
-        res.status(200).send("New contact created!");
+        res.status(200).json({
+            "status": "success",
+            "message": "New contact created"
+        });
     }
     catch(err){
-        res.status(500).send("Error at create contact endpoint : " + err);
+        console.error("Unexpected error at create contact endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at create contact endpoint"
+        });
     }
 };
 
@@ -73,9 +121,7 @@ const getContacts = async (req, res) => {
         // fetch from specific collection
         const Contact = contactCreator(`contacts::${req.businessID}`);
         
-        // query choice
-        // there will be client and supplier
-        // { type: [ 'client', 'supplier' ] }
+        // query choice: there will be only client and supplier
         const queryOptions = [];
         if (req.query.type instanceof Array) queryOptions.push(...req.query.type);
         else if (req.query.type) queryOptions.push(req.query.type);
@@ -98,13 +144,13 @@ const getContacts = async (req, res) => {
         else contactTypes.push(ContactType.CLIENT, ContactType.SUPPLIER);
 
         const returnData = [];
-        let getErr = false;
         await Contact.find({"contactType": {$in: contactTypes}}).then((contacts) => {
             try {
                 // found the object, like a list of Contact instances
                 // console.log(contacts);
                 for (let i = 0; i < contacts.length; i++){
                     const contactData = {
+                        "contactID": contacts[i]._id,
                         "firstName": contacts[i].contactFirstName,
                         "lastName": contacts[i].contactLastName,
                         "phone": contacts[i].contactPhone,
@@ -117,17 +163,218 @@ const getContacts = async (req, res) => {
                 }
             }
             catch(err) {
-                getErr = true;
-                return;
+                return res.status(500).json({
+                    "status": "error",
+                    "message": "Can't get contacts"
+                });
             }
         })
-        if (getErr) return res.status(500).send("Can't get contacts");
 
-        res.json(returnData);
+        res.status(200).json({
+            "status": "success",
+            "message": "Return list of contacts in the business successfully",
+            "content": returnData
+        });
     }
     catch(err){
-        res.status(500).send("Error at get contacts endpoint : " + err);
+        console.error("Unexpected error at get contacts endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at get contacts endpoint"
+        });
     }
 }
 
-module.exports = { createContact, getContacts };
+
+const viewContact = async (req, res) => {
+    try {
+        // there will always include the contactID always. So no sweat
+        const contactID = req.params.contactID;
+
+        // get contact collection
+        const Contact = contactCreator(`contacts::${req.businessID}`);
+
+        const foundContact = await Contact.findOne({"_id": contactID});
+        if (!foundContact) return res.status(403).json({
+            "status": "error",
+            "message": "No contact found"
+        })
+
+        const returnData = {
+            "title": foundContact.contactTitle,
+            "firstName": foundContact.contactFirstName,
+            "lastName": foundContact.contactLastName,
+            "phone": foundContact.contactPhone,
+            "email": foundContact.email,
+            "businessName": foundContact.businessName,
+            "address": foundContact.address,
+            "taxID": foundContact.taxID,
+            "imgUrl": foundContact.imgUrl,
+            "type": foundContact.contactType
+        }
+        
+        res.status(200).json({
+            "status": "success",
+            "message": "Return contact information successfully",
+            "content": returnData
+        });
+    }
+    catch(err){
+        console.error("Unexpected error at get contact endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at get contact endpoint"
+        });
+    }
+}
+
+
+const updateContact = async (req, res) => {
+    try {
+        // check role, better this way for clarity
+        if (req.role !== BusinessRole.BUSINESS_ADMIN && req.role !== BusinessRole.ACCOUNTANT) return res.status(403).json({
+            "status": "error",
+            "message": "User is not the admin nor an accountant"
+        });
+
+        // get specific contact model, there will be many according to business
+        const contactID = req.params.contactID;
+        const Contact = contactCreator(`contacts::${req.businessID}`);
+
+        // get data passed in through request
+        const {
+            type,
+            title,
+            firstName,
+            lastName,
+            phone,
+            address,
+            email,
+            taxID,
+            imgData
+        } = req.body;
+        
+        // check if the input is complete
+        if (!firstName ||
+            !lastName ||
+            !phone ||
+            !address ||
+            !email ||
+            !taxID
+        ) return res.status(400).json({
+            "status": "error",
+            "message": "Incomplete input: firstName, lastName, phone, address, email and taxID are needed"
+        });
+        const contactBusinessName = (req.contactBusinessName) ? req.contactBusinessName : "-";
+        const imgUrl = (!imgData) ? "-" : imgData;
+        
+        // validate input
+        if (!validateName(firstName)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid firstname: must contain only TH or EN alphabet"
+        });
+        if (!validateName(lastName)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid firstname: must contain only TH or EN alphabet"
+        });
+        if (!validatePhone(phone)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid phone number: must be number with length of 10"
+        });
+        if (!validateTaxID(taxID)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid tax ID: must be number with length of 13"
+        });
+        if (!validateEmail(email)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid email"
+        });
+        if (isNaN(type)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid title: must be enum of 0-1"
+        });
+        if (isNaN(title)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid title: must be enum of 0-3"
+        });
+
+        // check for duplicated information from other contacts
+        const foundContact = await Contact.findOne({$and: [{$or: [{"phone": phone}, {"email": email}]}, {"_id": {$ne: contactID}}]});
+        if (foundContact) return res.send(403).json({
+            "status": "error",
+            "message": "Phone or email is already taken"
+        });
+
+        // formatting name
+        const formattedFirstName = (validateNameEN(firstName)) ? firstName[0].toUpperCase() + firstName.slice(1).toLowerCase() : firstName;
+        const formattedLastName = (validateNameEN(lastName)) ? lastName[0].toUpperCase() + lastName.slice(1).toLowerCase() : lastName;
+
+        await Contact.findOneAndUpdate({ "_id": contactID}, {
+            "contactType": type,
+            "contactTitle": title,
+            "contactFirstName": formattedFirstName,
+            "contactLastName": formattedLastName,
+            "contactPhone": phone,
+            "businessName": contactBusinessName,
+            "address": address,
+            "email": email,
+            "taxID": taxID,
+            "imgUrl": imgUrl,
+        }, {"new": true}).then((docs) => {
+            try {
+                console.log("Updated Contact : ", docs);
+            }
+            catch(err) {
+                return res.status(500).json({
+                    "status": "error",
+                    "message": "Cannot update the contact"
+                });
+            }
+        });
+
+        res.status(200).json({
+            "status": "success",
+            "message": "Contact updated",
+        });
+    }
+    catch(err){
+        console.error("Unexpected error at update contact endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at update contact endpoint"
+        });
+    }
+}
+
+// Curious point:
+// Contact relation with document is that the contact information which is on the document doesn't matter
+// a contact can be deleted here and the contact which is already on the paper will continue to exist. No sweat
+const deleteContact = async (req, res) => {
+    try {
+        if (req.role !== BusinessRole.BUSINESS_ADMIN && req.role !== BusinessRole.ACCOUNTANT) return res.status(403).json({
+            "status": "error",
+            "message": "User is not the admin nor an accountant"
+        });
+
+        // get specific contact model, there will be many according to business
+        const contactID = req.params.contactID;
+        const Contact = contactCreator(`contacts::${req.businessID}`);
+        
+        const foundContact = await Contact.findOne({"_id": contactID});
+        if (foundContact) await Contact.deleteOne({"_id": contactID});
+
+        res.status(200).json({
+            "status": "success",
+            "message": "Contact deleted",
+        });
+    }
+    catch(err){
+        console.error("Unexpected error at delete contact endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at delete contact endpoint"
+        });
+    }
+}
+
+module.exports = { createContact, getContacts, viewContact, updateContact, deleteContact};

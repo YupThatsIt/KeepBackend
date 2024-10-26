@@ -12,7 +12,7 @@ const documentBase = {
         type: mongoose.Schema.Types.ObjectId,
         required: true
     },
-    stakeholderID: {
+    contactID: {
         type: mongoose.Schema.Types.ObjectId,
         required: true
     },

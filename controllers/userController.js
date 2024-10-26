@@ -7,16 +7,23 @@ const { BusinessRole } = require("../enum");
 
 const mongoose = require("mongoose");
 
-// View account -> this will get everything
+// View account -> this will fetch important user's information to client
 const viewUser = async(req, res) => {
     try {
-        // get the user's information with
+        // Convert user ID in form of hex string into an ObjectID 12 bits
         const userID = mongoose.Types.ObjectId.createFromHexString(req.userID);
+        
         const foundUser = await User.findOne({ "_id": userID});
-        if (!foundUser) return res.status(403).send("No user is found");
+        if (!foundUser) return res.status(404).json({
+            "status": "error",
+            "message": "The user is not found"
+        });
 
         const foundAccount = await Account.findOne({ "userID": userID});
-        if (!foundAccount) return res.status(403).send("No account is found");
+        if (!foundAccount) return res.status(403).json({
+            "status": "error",
+            "message": "The account is not found"
+        });
 
         const returnData = {
             "username": foundUser.username,
@@ -29,53 +36,98 @@ const viewUser = async(req, res) => {
             "imgUrl": foundAccount.imgUrl 
         };
 
-        res.json(returnData);
+        res.status(200).json({
+            "status": "success",
+            "message": "Return user's information successfully",
+            "content": returnData
+        });
     }
     catch(err){
-        res.status(500).send("Error at view user endpoint : " + err);
+        console.error("Unexpected error at view user endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at view user endpoint"
+        });
     }
 };
 
 
-// Update account -> this will update whatever the client wanted to
+// It's a complete update; meaning set all the properties in the document anew.
 const updateUser = async (req, res) => {
     try {
         // see if the input data is correct
-        const { user, email, title, firstName, lastName, address, phone, imgData} = req.body;
-        let imgUrl;
+        const { 
+            user,
+            email,
+            title,
+            firstName,
+            lastName,
+            address,
+            phone,
+            imgData
+        } = req.body;
         
-        if (!user || !email || !firstName || !lastName || !address || !phone) return res.status(400).send("Input is incompleted");
-        if (isNaN(title)) return res.status(400).send("Invalid title: must be enum of 0-3");
-
-        // change if imgData is anything other than a simple string
-        if (!imgData) imgUrl = "-";
-        else imgUrl = imgData;
+        if (
+            !user ||
+            !email ||
+            !firstName ||
+            !lastName ||
+            !address ||
+            !phone
+        ) return res.status(400).json({
+            "status": "error",
+            "message": "Incomplete input: user, email, firstName, lastName, address and phone are needed"
+        });
+        if (isNaN(title)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid enum: title must be enum of 0-3 only"
+        });
         
-        // data validation
-        if (!validateEmail(email)) return res.status(400).send("Invalid email");
-        if (!validateName(firstName)) return res.status(400).send("Invalid firstname: must contain only TH or EN alphabet");
-        if (!validateName(lastName)) return res.status(400).send("Invalid firstname: must contain only TH or EN alphabet");
-        if (!validatePhone(phone)) return res.status(400).send("Invalid phone number: must be number with length of 10");
+        // Change if imgData is anything other than a simple string
+        const imgUrl = (imgData) ? imgData : "-";
         
-        // capitalize english names
-        let formattedFirstName;
-        let formattedLastName; 
-        if (validateNameEN(firstName)) formattedFirstName = firstName[0].toUpperCase() + firstName.slice(1).toLowerCase();
-        else formattedFirstName = firstName;
-        if (validateNameEN(lastName)) formattedLastName = lastName[0].toUpperCase() + lastName.slice(1).toLowerCase();
-        else formattedLastName = lastName;
+        // Data validation
+        if (!validateEmail(email)) return res.status(400).json({
+            "status": "error",
+            "message": "Incorrect format: email's format is wrong"
+        });
+        if (!validateName(firstName)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid firstname: must contain only TH or EN alphabet"
+        });
+        if (!validateName(lastName)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid lastname: must contain only TH or EN alphabet"
+        });
+        if (!validatePhone(phone)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid phone number: must be a number with length of 10"
+        });
         
-        const userID = mongoose.Types.ObjectId.createFromHexString(req.userID);
+        
+        // Capitalize english names
+        const formattedFirstName = (validateNameEN(firstName)) ? firstName[0].toUpperCase() + firstName.slice(1).toLowerCase() : firstName;
+        const formattedLastName = (validateNameEN(lastName)) ? lastName[0].toUpperCase() + lastName.slice(1).toLowerCase() : lastName;
         
         // find other user and account to check if the input information is good to go or not
+        const userID = mongoose.Types.ObjectId.createFromHexString(req.userID);
+
+        // Check to see if the user exist or not
         const otherUser = await User.findOne({ $and: [{ $or: [{"email": email}, {"username": user}]}, {"_id": { $ne: userID }}]});
-        if (otherUser) return res.sendStatus(403);
+        if (otherUser) return res.status(403).json({
+            "status": "error",
+            "message": "Email or username is taken. It must be unique"
+        });
         
+        // Check to see if the account exist or not 
         const otherAccount = await Account.findOne({ $and: [{"phone": phone}, {"userID": { $ne: userID }}]});
-        if (otherAccount) return res.sendStatus(403);
+        if (otherAccount) return res.status(403).json({
+            "status": "error",
+            "message": "Phone number is taken. It must be unique"
+        });
         
+        // add upsert if problems are happening
         // Note that foundUser will contain old information if not use option { new: true }
-        let updateErr = false;
         await User.findOneAndUpdate({ "_id": userID}, {
             "username": user,
             "email": email
@@ -84,11 +136,13 @@ const updateUser = async (req, res) => {
                 console.log("Updated User : ", docs);
             }
             catch(err) {
-                updateErr = true;
-                return;
+                console.log(err);
+                return res.status(500).json({
+                    "status": "error",
+                    "message": "Cannot update the user"
+                });
             }
         });
-        if (updateErr) return res.status(500).send("User cannot be updated");
 
         await Account.findOneAndUpdate({ "userID": userID}, {
             "title": title,
@@ -102,58 +156,74 @@ const updateUser = async (req, res) => {
                 console.log("Updated Account : ", docs);
             }
             catch(err) {
-                updateErr = true;
-                return;
+                return res.status(500).json({
+                    "status": "error",
+                    "message": "Cannot update the account"
+                });
             }
         });
-        if (updateErr) return res.status(500).send("Account cannot be updated");
 
-
-        res.status(200).send("User updated");
+        res.status(200).json({
+            "status": "success",
+            "message": "User updated"
+        });
     }
     catch(err){
-        res.status(500).send("Error at update user endpoint : " + err);
+        console.error("Unexpected error at update user endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at update user endpoint"
+        });
     }
 };
 
 
-// Delete account -> this will wipe out both account and user and logout for you too.
+// Delete account -> doesn't matter if 
 const deleteUser = async (req, res) => {
     try {
         const userID = mongoose.Types.ObjectId.createFromHexString(req.userID);
+
+        // delete the user
         const foundUser = await User.findOne({ "_id": userID });
-        if (!foundUser) return res.status(403).send("No user is found");
-
-        const foundAccount = await Account.findOne({ "userID": userID});
-        if (!foundAccount) return res.status(403).send("No account is found");
-
-        // we need to check for admin first before proceeding or else
-        // we might delete data before knowing that the user is in fact is an admin
-        let isAdmin = false;
-        foundUser.businessRoles.forEach((business) => {
-            if (business.role === BusinessRole.BUSINESS_ADMIN) isAdmin = true;
-        });
-        if (isAdmin) return res.status(403).send("You are an admin of a business, please delete the business first before continue");
-
-        for (const business of foundUser.businessRoles) {
-            let role;
-            if (business.role === BusinessRole.ACCOUNTANT) role = "accountants";
-            else role = "viewers";
-
-            await Business.updateOne({ "_id": business.businessID }, {
-                $pull: { 
-                    [role]: { "userID": userID }
-                }
+        if (foundUser) {
+            // check if the user is an admin
+            foundUser.businessRoles.forEach((business) => {
+                if (business.role === BusinessRole.BUSINESS_ADMIN) return res.status(403).json({
+                    "status": "error",
+                    "message": "The user is an admin of a business"
+                });
             });
+            
+            // pull the user from business
+            for (const business of foundUser.businessRoles) {
+                const role = (business.role === BusinessRole.ACCOUNTANT) ? "accountants" : "viewers";
+                await Business.updateOne({ "_id": business.businessID }, {
+                    $pull: { 
+                        [role]: { "userID": userID }
+                    }
+                });
+            }
+            await User.deleteOne({"_id": userID});
         }
+        
+        // delete the account
+        const foundAccount = await Account.findOne({"userID": userID});
+        if (foundAccount) await Account.deleteOne({"userID": userID});
 
-        await User.deleteOne({"_id": userID});
-        await Account.deleteOne({"userID": userID});
-
-        res.status(200).send("User deleted");
+        // clear any jwt cookie left
+        res.clearCookie("jwt", { httpOnly: true});
+        
+        res.status(200).json({
+            "status": "success",
+            "message": "User deleted"
+        });
     }
     catch(err){
-        res.status(500).send("Error at delete user endpoint : " + err);
+        console.error("Unexpected error at delete user endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at delete user endpoint"
+        });
     }
 };
 
