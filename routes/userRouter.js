@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { viewUser, updateUser, deleteUser } = require("../controllers/userController");
 const { checkPassword, updatePassword } = require("../controllers/userPasswordController");
+
 const verifyJWT = require("../middlewares/verifyJWT");
 
 /* 
