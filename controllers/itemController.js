@@ -69,6 +69,7 @@ const createItem = async (req, res) => {
   }
 };
 
+
 const updateItem = async (req, res) => {
   try {
     // Check if user has proper role (Admin or Accountant)
@@ -142,6 +143,7 @@ const updateItem = async (req, res) => {
   }
 };
 
+
 const deleteItem = async (req, res) => {
   try {
     // Check if user has proper role (Admin or Accountant)
@@ -174,6 +176,7 @@ const deleteItem = async (req, res) => {
     res.status(500).send("Error deleting item: " + err.message);
   }
 };
+
 
 const getItemsByType = async (req, res) => {
   try {
@@ -220,6 +223,7 @@ const getItemsByType = async (req, res) => {
   }
 };
 
+
 const getItemById = async (req, res) => {
   try {
     const { businessID, itemID } = req.params;
@@ -252,6 +256,7 @@ const getItemById = async (req, res) => {
     res.status(500).send("Error retrieving item: " + err.message);
   }
 };
+
 
 const updateItemQuantity = async (req, res) => {
   try {
@@ -298,6 +303,7 @@ const updateItemQuantity = async (req, res) => {
     res.status(500).send("Error updating item quantity: " + err.message);
   }
 };
+
 
 module.exports = {
   createItem,
