@@ -13,6 +13,7 @@ const createBusiness = async(req, res) =>{
             address,
             phone,
             taxID,
+            registNum,
             logoData
         } = req.body;
         
@@ -38,6 +39,10 @@ const createBusiness = async(req, res) =>{
         if (!validateTaxID(taxID)) return res.status(400).json({
             "status": "error",
             "message": "Invalid tax ID: must be number with length of 13"
+        });
+        if (!validateTaxID(registNum)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid registration number: must be number with length of 13"
         });
 
         // check duplication
@@ -67,6 +72,7 @@ const createBusiness = async(req, res) =>{
             "address": address,
             "phone": phone,
             "taxID": taxID,
+            "registrationNumber": registNum,
             "admin": {
                 "userID": userID,
                 "memberNumber": 1
@@ -91,14 +97,16 @@ const createBusiness = async(req, res) =>{
         })
         await foundUser.save();
 
+        const returnData = {
+            "name": encodeURI(name),
+            "branch": encodeURI(branchName)
+        }
+
         // return the encoded business name and branch
         res.status(201).json({
             "status": "success",
             "message": "New business created",
-            "content" : {
-                "name": encodeURI(name),
-                "branch": encodeURI(branchName)
-            }
+            "content" : returnData
         });
     }
     catch(err){
@@ -160,6 +168,7 @@ const viewBusiness = async (req, res) => {
             "address": foundBusiness.address,
             "phone": foundBusiness.phone,
             "taxID": foundBusiness.taxID,
+            "registNum": foundBusiness.registrationNumber,
             "logoUrl": foundBusiness.logoUrl
         };
 

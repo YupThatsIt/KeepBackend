@@ -20,7 +20,11 @@ const businessSchema = new mongoose.Schema({
     },
     taxID: {
         type: String,
-        required: true,
+        required: true
+    },
+    registrationNumber: {
+        type: String,
+        required: true
     },
     admin: {
         userID: {
