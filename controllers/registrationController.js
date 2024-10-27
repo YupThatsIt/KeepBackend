@@ -1,6 +1,7 @@
 const { User, Account } = require("../models/userModel");
 const { validateEmail, validateNameEN, validateName, validatePhone }= require("../utils/stringValidation");
 const { generateAccessToken, generateRefreshToken } = require("../utils/generateToken");
+const { NameTitle } = require("../enum");
 const bcrypt = require("bcrypt");
 
 const registrationValidate = async (req, res) => {
@@ -72,7 +73,7 @@ const registerUser = async (req, res) => {
             "status": "error",
             "message": "Incomplete input: user, email, pwd, firstName, lastName, address and phone are needed"
         });
-        if (Object.values(NameTitle).indexOf(title) > -1) return res.status(400).json({
+        if (Object.values(NameTitle).indexOf(title) === -1) return res.status(400).json({
             "status": "error",
             "message": "Invalid title: must be enum NameTitle"
         });
