@@ -18,7 +18,7 @@ const itemSchema = new mongoose.Schema({
         type: String
     },
     itemType: {
-        type: Number,
+        type: String,
         enum: [
             ItemType.PRODUCT,
             ItemType.SERVICE

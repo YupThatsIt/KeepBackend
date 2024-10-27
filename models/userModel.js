@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId
         }, 
         role: {
-            type: Number,
+            type: String,
             enum: [ 
                 BusinessRole.BUSINESS_ADMIN,
                 BusinessRole.ACCOUNTANT, 
@@ -46,7 +46,7 @@ const userAccountSchema = new mongoose.Schema({
         required: true
     },
     title: {
-        type: Number,
+        type: String,
         enum: [ 
             NameTitle.MALE, 
             NameTitle.FEMALE,

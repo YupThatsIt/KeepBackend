@@ -17,7 +17,7 @@ const transactionSchema = new mongoose.Schema({
         type: String
     },
     transactionType: {
-        type: Number,
+        type: String,
         enum: [
             TransactionType.INCOME,
             TransactionType.EXPENSE
@@ -55,7 +55,7 @@ const bankAccountSchema = new mongoose.Schema({
         required: true
     },
     bankAccountType: {
-        type: Number,
+        type: String,
         enum: [ 
             BankAccountType.CURRENT, 
             BankAccountType.SAVING,
@@ -84,7 +84,7 @@ const financialChannelProviderSchema = new mongoose.Schema({
         required: true
     },
     providerType: {
-        type: Number,
+        type: String,
         enum: [ 
             FinancialChannelProviderType.BANK, 
             FinancialChannelProviderType.EWALLET
@@ -114,7 +114,5 @@ const ewalletAccountCreator = (collectionName) => {
 // this model will have only a single collection in the system as of now
 const FinancialProvider = mongoose.model("financial_provider", financialChannelProviderSchema, "financial_providers");
 
-// export system wide model
-module.exports = { FinancialProvider };
 // export functions instead. This will make a schema with collection input name
-module.exports = { transactionCreator, bankAccountCreator, ewalletAccountCreator };
+module.exports = { transactionCreator, bankAccountCreator, ewalletAccountCreator, FinancialProvider};

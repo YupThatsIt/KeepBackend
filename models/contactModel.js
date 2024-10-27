@@ -1,7 +1,7 @@
 // Contact related models -> Done
 
 const mongoose = require("mongoose");
-const { ContactType, NameTitle } = require("../enum");
+const { ContactType, NameTitle, BusinessType } = require("../enum");
 
 // Contact schema
 const contactSchema = new mongoose.Schema({
@@ -10,7 +10,7 @@ const contactSchema = new mongoose.Schema({
         required: true
     },
     contactType: {
-        type: Number,
+        type: String,
         enum: [
             ContactType.CLIENT,
             ContactType.SUPPLIER
@@ -18,12 +18,20 @@ const contactSchema = new mongoose.Schema({
         required: true
     },
     contactTitle: {
-        type: Number,
+        type: String,
         enum: [ 
             NameTitle.MALE, 
             NameTitle.FEMALE,
             NameTitle.SINGLE_FEMALE,
             NameTitle.NOT_SPECIFIED
+        ],
+        required: true
+    },
+    businessType: {
+        type: String,
+        enum: [ 
+            BusinessType.COOPERATE,
+            BusinessType.INDIVIDUAL
         ],
         required: true
     },
