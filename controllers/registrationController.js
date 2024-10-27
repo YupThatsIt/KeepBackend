@@ -67,7 +67,6 @@ const registerUser = async (req, res) => {
             !pwd ||
             !firstName ||
             !lastName ||
-            !address ||
             !phone
         ) return res.status(400).json({
             "status": "error",
