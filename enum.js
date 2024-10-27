@@ -3,16 +3,16 @@
 //////////////////////////////
 
 const NameTitle = {
-    MALE: 0,
-    FEMALE: 1,
-    SINGLE_FEMALE: 2,
-    NOT_SPECIFIED: 3
+    MALE: "นาย",
+    FEMALE: "นาง",
+    SINGLE_FEMALE: "นางสาว",
+    NOT_SPECIFIED: "ไม่ระบุ"
 };
 
 const BusinessRole = {
-    BUSINESS_ADMIN: 0,
-    ACCOUNTANT: 1,
-    VIEWER: 2
+    BUSINESS_ADMIN: "admin",
+    ACCOUNTANT: "accountant",
+    VIEWER: "viewer"
 };
 
 //////////////////////
@@ -20,10 +20,10 @@ const BusinessRole = {
 //////////////////////
 
 const DocumentStatus = {
-    DRAFT: 0,
-    WAIT_FOR_RESPONSE: 1,
-    COMPLETED: 2,
-    EXPIRED: 3
+    DRAFT: "ร่าง",
+    WAIT_FOR_RESPONSE: "รอตอบกลับ",
+    COMPLETED: "เสร็จสิ้น",
+    EXPIRED: "หมดอายุ"
 };
 
 // const DocumentType = {
@@ -39,8 +39,8 @@ const DocumentStatus = {
 //////////////////
 
 const ItemType = {
-    PRODUCT: 0,
-    SERVICE: 1
+    PRODUCT: "สินค้า",
+    SERVICE: "บริการ"
 };
 
 /////////////////////////
@@ -49,24 +49,24 @@ const ItemType = {
 
 // regard the status of transaction : it is not certain for now if a transaction could be modify in someway
 const TransactionStatus = {
-    FINISHED: 0,
-    UNFINISHED: 1,
+    FINISHED: "สำเร็จแล้ว",
+    UNFINISHED: "ยังไม่สำเร็จ",
 };
 
 const TransactionType = {
-    INCOME: 0,
-    EXPENSE: 1,
+    INCOME: "รายรับ",
+    EXPENSE: "รายจ่าย",
 };
 
 const BankAccountType = {
-    CURRENT: 0,
-    SAVING: 1,
-    FIXED_DEPOSIT: 2
+    CURRENT: "กระแสรายวัน",
+    SAVING: "กระแสออมทรัพย์",
+    FIXED_DEPOSIT: "ฝากประจำ"
 };
 
 const FinancialChannelProviderType = {
-    BANK: 0,
-    EWALLET: 1
+    BANK: "บัญชีธนาคาร",
+    EWALLET: "Ewallet"
 };
 
 ///////////////////////
@@ -74,8 +74,28 @@ const FinancialChannelProviderType = {
 ///////////////////////
 
 const ContactType = {
-    CLIENT: 0,
-    SUPPLIER: 1
+    CLIENT: "ลูกค้า",
+    SUPPLIER: "ผู้ขาย"
 };
 
-module.exports = { NameTitle, BusinessRole, DocumentStatus, ItemType, TransactionStatus, TransactionType, BankAccountType, FinancialChannelProviderType, ContactType };
+////////////
+// Others //
+////////////
+
+const BusinessType = {
+    COOPERATE: "นิติบุคคล",
+    INDIVIDUAL: "บุคคลธรรมดา"
+};
+
+module.exports = { 
+    NameTitle,
+    BusinessRole,
+    DocumentStatus,
+    ItemType,
+    TransactionStatus,
+    TransactionType,
+    BankAccountType,
+    FinancialChannelProviderType,
+    ContactType,
+    BusinessType
+};

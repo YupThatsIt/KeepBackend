@@ -1,13 +1,16 @@
 const { contactCreator } = require("../models/contactModel");
-const { BusinessRole, ContactType } = require("../enum");
+const { BusinessRole, ContactType, NameTitle, BusinessType } = require("../enum");
 const { validateEmail, validatePhone, validateTaxID, validateNameEN, validateName} = require("../utils/stringValidation"); 
 
 const createContact = async(req, res) =>{
     try {
         // check role, better this way for clarity
-        if (req.role !== BusinessRole.BUSINESS_ADMIN && req.role !== BusinessRole.ACCOUNTANT) return res.status(403).json({
+        if (
+            req.role !== BusinessRole.BUSINESS_ADMIN && 
+            req.role !== BusinessRole.ACCOUNTANT
+        ) return res.status(403).json({
             "status": "error",
-            "message": "User is not the admin nor an accountant"
+            "message": "Unauthorized: User is not the admin nor an accountant"
         });
 
         // get specific contact model, there will be many according to business
@@ -16,6 +19,7 @@ const createContact = async(req, res) =>{
         // get data passed in through request
         const {
             type,
+            businessType,
             title,
             firstName,
             lastName,
@@ -61,13 +65,17 @@ const createContact = async(req, res) =>{
             "status": "error",
             "message": "Invalid email"
         });
-        if (isNaN(type)) return res.status(400).json({
+        if (Object.values(ContactType).indexOf(type) > -1) return res.status(400).json({
             "status": "error",
-            "message": "Invalid title: must be enum of 0-1"
+            "message": "Invalid type: must be enum ContactType"
         });
-        if (isNaN(title)) return res.status(400).json({
+        if (Object.values(NameTitle).indexOf(title) > -1) return res.status(400).json({
             "status": "error",
-            "message": "Invalid title: must be enum of 0-3"
+            "message": "Invalid title: must be enum NameTitle"
+        });
+        if (Object.values(BusinessType).indexOf(businessType) > -1) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid title: must be enum businessType"
         });
 
         // check for duplicated information
@@ -90,6 +98,7 @@ const createContact = async(req, res) =>{
             "contactLastName": formattedLastName,
             "contactPhone": phone,
             "businessName": contactBusinessName,
+            "businessType": businessType,
             "address": address,
             "email": email,
             "taxID": taxID,
@@ -156,6 +165,7 @@ const getContacts = async (req, res) => {
                         "phone": contacts[i].contactPhone,
                         "email": contacts[i].email,
                         "businessName": contacts[i].businessName,
+                        "businessType": contacts[i].businessType,
                         "imgUrl": contacts[i].imgUrl,
                         "type": contacts[i].contactType
                     }
@@ -207,6 +217,7 @@ const viewContact = async (req, res) => {
             "phone": foundContact.contactPhone,
             "email": foundContact.email,
             "businessName": foundContact.businessName,
+            "businessType": foundContact.businessType,
             "address": foundContact.address,
             "taxID": foundContact.taxID,
             "imgUrl": foundContact.imgUrl,
@@ -232,9 +243,12 @@ const viewContact = async (req, res) => {
 const updateContact = async (req, res) => {
     try {
         // check role, better this way for clarity
-        if (req.role !== BusinessRole.BUSINESS_ADMIN && req.role !== BusinessRole.ACCOUNTANT) return res.status(403).json({
+        if (
+            req.role !== BusinessRole.BUSINESS_ADMIN && 
+            req.role !== BusinessRole.ACCOUNTANT
+        ) return res.status(403).json({
             "status": "error",
-            "message": "User is not the admin nor an accountant"
+            "message": "Unauthorized: User is not the admin nor an accountant"
         });
 
         // get specific contact model, there will be many according to business
@@ -249,6 +263,7 @@ const updateContact = async (req, res) => {
             lastName,
             phone,
             address,
+            businessType,
             email,
             taxID,
             imgData
@@ -289,13 +304,17 @@ const updateContact = async (req, res) => {
             "status": "error",
             "message": "Invalid email"
         });
-        if (isNaN(type)) return res.status(400).json({
+        if (Object.values(ContactType).indexOf(type) > -1) return res.status(400).json({
             "status": "error",
-            "message": "Invalid title: must be enum of 0-1"
+            "message": "Invalid type: must be enum ContactType"
         });
-        if (isNaN(title)) return res.status(400).json({
+        if (Object.values(NameTitle).indexOf(title) > -1) return res.status(400).json({
             "status": "error",
-            "message": "Invalid title: must be enum of 0-3"
+            "message": "Invalid title: must be enum NameTitle"
+        });
+        if (Object.values(BusinessType).indexOf(businessType) > -1) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid title: must be enum businessType"
         });
 
         // check for duplicated information from other contacts
@@ -316,6 +335,7 @@ const updateContact = async (req, res) => {
             "contactLastName": formattedLastName,
             "contactPhone": phone,
             "businessName": contactBusinessName,
+            "businessType": businessType,
             "address": address,
             "email": email,
             "taxID": taxID,
@@ -351,9 +371,12 @@ const updateContact = async (req, res) => {
 // a contact can be deleted here and the contact which is already on the paper will continue to exist. No sweat
 const deleteContact = async (req, res) => {
     try {
-        if (req.role !== BusinessRole.BUSINESS_ADMIN && req.role !== BusinessRole.ACCOUNTANT) return res.status(403).json({
+        if (
+            req.role !== BusinessRole.BUSINESS_ADMIN && 
+            req.role !== BusinessRole.ACCOUNTANT
+        ) return res.status(403).json({
             "status": "error",
-            "message": "User is not the admin nor an accountant"
+            "message": "Unauthorized: User is not the admin nor an accountant"
         });
 
         // get specific contact model, there will be many according to business

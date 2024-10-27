@@ -16,6 +16,15 @@ const documentBase = {
         type: mongoose.Schema.Types.ObjectId,
         required: true
     },
+    businessInfo: {
+
+    },
+    authorInfo: {
+
+    },
+    contactInfo: {
+
+    },
     documentNumber: {
         type: String,
         required: true,
@@ -47,7 +56,16 @@ const documentBase = {
         itemID: {
             type: mongoose.Schema.Types.ObjectId
         },
+        name: {
+            type: String
+        },
         quantity: {
+            type: Number
+        },
+        pricePerUnit: {
+            type: Number
+        },
+        taxRate: {
             type: Number
         },
         totalCost: {

@@ -4,7 +4,7 @@ const verifyJWT = require("../middlewares/verifyJWT");
 const verifyRole = require("../middlewares/checkBusinessRole");
 const { createBusiness, getBusinesses, viewBusiness, updateBusiness } = require("../controllers/businessController");
 const { generateJoinCode, joinBusiness, leaveBusiness } = require("../controllers/businessJoinLeaveController");
-const { getBusinessMembers } = require("../controllers/businessMemberController");
+const { getBusinessMembers, promoteToAccountant, promoteToAdmin, demoteToViewer } = require("../controllers/businessMemberController");
 
 /* 
 --------------------------------------------
@@ -141,7 +141,41 @@ Outputs ->  Status 200 -> Business joined
 */ 
 router.delete("/business/:businessName/leave", verifyJWT, verifyRole, leaveBusiness);
 
+/* 
+--------------------------------------------
+GET /business/:businessName/members?role={role}
+--------------------------------------------
+
+--------------------------------------------
+*/ 
 router.get("/business/:businessName/members", verifyJWT, verifyRole, getBusinessMembers);
+
+/* 
+--------------------------------------------
+POST /business/:businessName/member/:memberNumber/promote-to-accountant
+--------------------------------------------
+
+--------------------------------------------
+*/ 
+router.post("/business/:businessName/member/:memberNumber/promote-to-accountant", verifyJWT, verifyRole, promoteToAccountant);
+
+/* 
+--------------------------------------------
+POST /business/:businessName/member/:memberNumber/demote-to-viewer
+--------------------------------------------
+
+--------------------------------------------
+*/ 
+router.post("/business/:businessName/member/:memberNumber/demote-to-viewer", verifyJWT, verifyRole, demoteToViewer);
+
+/* 
+--------------------------------------------
+POST /business/:businessName/member/:memberNumber/promote-to-admin
+--------------------------------------------
+
+--------------------------------------------
+*/ 
+router.post("/business/:businessName/member/:memberNumber/promote-to-admin", verifyJWT, verifyRole, promoteToAdmin);
 
 
 module.exports = router;
