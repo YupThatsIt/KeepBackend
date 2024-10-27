@@ -13,7 +13,7 @@ const createBusiness = async(req, res) =>{
             address,
             phone,
             taxID,
-            registNum,
+            registrationNumber,
             logoData
         } = req.body;
         
@@ -21,7 +21,8 @@ const createBusiness = async(req, res) =>{
         if (!name ||
             !address ||
             !phone ||
-            !taxID
+            !taxID ||
+            !registrationNumber
         ) return res.status(400).json({
             "status": "error",
             "message": "Input is incompleted"
@@ -40,7 +41,7 @@ const createBusiness = async(req, res) =>{
             "status": "error",
             "message": "Invalid tax ID: must be number with length of 13"
         });
-        if (!validateTaxID(registNum)) return res.status(400).json({
+        if (!validateTaxID(registrationNumber)) return res.status(400).json({
             "status": "error",
             "message": "Invalid registration number: must be number with length of 13"
         });
@@ -72,7 +73,7 @@ const createBusiness = async(req, res) =>{
             "address": address,
             "phone": phone,
             "taxID": taxID,
-            "registrationNumber": registNum,
+            "registrationNumber": registrationNumber,
             "admin": {
                 "userID": userID,
                 "memberNumber": 1
@@ -168,7 +169,7 @@ const viewBusiness = async (req, res) => {
             "address": foundBusiness.address,
             "phone": foundBusiness.phone,
             "taxID": foundBusiness.taxID,
-            "registNum": foundBusiness.registrationNumber,
+            "registrationNumber": foundBusiness.registrationNumber,
             "logoUrl": foundBusiness.logoUrl
         };
 
