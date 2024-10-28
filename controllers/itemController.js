@@ -11,7 +11,7 @@ const createItem = async (req, res) => {
     ) {
       return res.status(403).json({
         status: "error",
-        message: "Unauthorized: Insufficient permissions",
+        message: "Unauthorized: Insufficient permissions"
       });
     }
 
@@ -22,7 +22,7 @@ const createItem = async (req, res) => {
     if (!itemName || itemType === undefined || quantity === undefined) {
       return res.status(400).json({
         status: "error",
-        message: "Input is incomplete",
+        message: "Input is incomplete"
       });
     }
 
@@ -30,7 +30,7 @@ const createItem = async (req, res) => {
     if (!Object.values(ItemType).includes(itemType)) {
       return res.status(400).json({
         status: "error",
-        message: "Invalid item type",
+        message: "Invalid item type"
       });
     }
 
@@ -38,7 +38,7 @@ const createItem = async (req, res) => {
     if (quantity < 0) {
       return res.status(400).json({
         status: "error",
-        message: "Quantity must be non-negative",
+        message: "Quantity must be non-negative"
       });
     }
 
@@ -53,7 +53,7 @@ const createItem = async (req, res) => {
     if (existingItem) {
       return res.status(400).json({
         status: "error",
-        message: "Item name already exists",
+        message: "Item name already exists"
       });
     }
 
@@ -66,7 +66,7 @@ const createItem = async (req, res) => {
       itemName,
       itemDescription,
       itemType,
-      quantityOnHand: quantity, // Assign input quantity to both fields
+      quantityOnHand: quantity,
       quantityForInvoice: quantity,
       unitType,
       imgUrl,
@@ -77,13 +77,13 @@ const createItem = async (req, res) => {
     res.status(201).json({
       status: "success",
       message: "Item created successfully",
-      content: newItem,
+      content: newItem
     });
   } catch (err) {
     console.error("Error in createItem:", err);
     res.status(500).json({
       status: "error",
-      message: "Error creating item: " + err.message,
+      message: "Error creating item: " + err.message
     });
   }
 };
@@ -91,40 +91,47 @@ const createItem = async (req, res) => {
 
 const updateItem = async (req, res) => {
   try {
-    // Check if user has proper role (Admin or Accountant)
     if (
       req.role !== BusinessRole.BUSINESS_ADMIN &&
       req.role !== BusinessRole.ACCOUNTANT
     ) {
-      return res.status(403).send("Unauthorized: Insufficient permissions");
+      return res.status(403).json({
+        status: "error",
+        message: "Unauthorized: Insufficient permissions"
+      });
     }
 
     const { businessID, itemID } = req.params;
     const { itemName, itemDescription, quantity, unitType, imgData } = req.body;
 
-    // Validate input
     if (!itemName || quantity === undefined) {
-      return res.status(400).send("Input is incomplete");
+      return res.status(400).json({
+        status: "error",
+        message: "Input is incomplete"
+      });
     }
 
-    // Validate quantity is non-negative
     if (quantity < 0) {
-      return res.status(400).send("Quantity must be non-negative");
+      return res.status(400).json({
+        status: "error",
+        message: "Quantity must be non-negative"
+      });
     }
 
     const Item = itemCreator(`items::${businessID}`);
 
-    // Check if item exists
     const existingItem = await Item.findOne({
       _id: itemID,
       businessID: businessID,
     });
 
     if (!existingItem) {
-      return res.status(404).send("Item not found");
+      return res.status(404).json({
+        status: "error",
+        message: "Item not found"
+      });
     }
 
-    // Check for duplicate item name (excluding current item)
     const duplicateItem = await Item.findOne({
       businessID: businessID,
       itemName: itemName,
@@ -132,13 +139,14 @@ const updateItem = async (req, res) => {
     });
 
     if (duplicateItem) {
-      return res.status(400).send("Item name already exists");
+      return res.status(400).json({
+        status: "error",
+        message: "Item name already exists"
+      });
     }
 
-    // Set default imgUrl if no imgData provided
     const imgUrl = imgData || existingItem.imgUrl;
 
-    // Update item
     const updatedItem = await Item.findOneAndUpdate(
       { _id: itemID, businessID: businessID },
       {
@@ -149,18 +157,23 @@ const updateItem = async (req, res) => {
         unitType,
         imgUrl,
       },
-      { new: true } // Return the updated document
+      { new: true }
     );
 
     res.status(200).json({
+      status: "success",
       message: "Item updated successfully",
-      item: updatedItem,
+      content: updatedItem
     });
   } catch (err) {
     console.error("Error in updateItem:", err);
-    res.status(500).send("Error updating item: " + err.message);
+    res.status(500).json({
+      status: "error",
+      message: "Error updating item: " + err.message
+    });
   }
 };
+
 
 const deleteItem = async (req, res) => {
   try {
