@@ -232,9 +232,10 @@ const getItemsByType = async (req, res) => {
 
     // Validate type parameter
     if (!type || !["product", "service", "all"].includes(type.toLowerCase())) {
-      return res
-        .status(400)
-        .send("Invalid type parameter. Must be 'product', 'service', or 'all'");
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid type parameter. Must be 'product', 'service', or 'all'"
+      });
     }
 
     const Item = itemCreator(`items::${businessID}`);
@@ -263,12 +264,20 @@ const getItemsByType = async (req, res) => {
       imgUrl: item.imgUrl,
     }));
 
-    res.status(200).json({ items: formattedItems });
-  } catch (err) {
+    res.status(200).json({
+      status: "success",
+      message: "Items retrieved successfully",
+      content: formattedItems
+    });
+  } catch (err)  {
     console.error("Error in getItemsByType:", err);
-    res.status(500).send("Error retrieving items: " + err.message);
+    res.status(500).json({
+      status: "error",
+      message: "Error retrieving items: " + err.message
+    });
   }
 };
+
 
 const getItemById = async (req, res) => {
   try {
