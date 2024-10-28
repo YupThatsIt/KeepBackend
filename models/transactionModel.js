@@ -1,7 +1,12 @@
 // Transaction related models -> Editing (Add saving)
 
 const mongoose = require("mongoose");
-const { BankAccountType, TransactionType, FinancialChannelProviderType } = require("../enum");
+const {
+    BankAccountType,
+    TransactionType,
+    FinancialChannelProviderType,
+    EwalletAccountType
+} = require("../enum");
 
 // Transaction which is represent incomes and expenses
 const transactionSchema = new mongoose.Schema({
@@ -9,7 +14,7 @@ const transactionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true
     },
-    financialChannelID: {
+    financialChannelID: { // channel
         type: mongoose.Schema.Types.ObjectId,
         required: true
     },
@@ -37,19 +42,38 @@ const transactionSchema = new mongoose.Schema({
 // financial account is the base schema for bank and ewallet account
 // both schemas use discriminator which mean that it will be store in the same collection which is exactly
 // the expected behavior
-const financialAccountSchema = new mongoose.Schema({
-    providerID: {
-        type: mongoose.Schema.Types.ObjectId,
+const financialAccountBase = {
+    shortenedCode: { // short code is for frontend as displayID
+        type: String,
         required: true
     },
     accountName: { // name in this case is not the actual account name but rather what you set (in the system) to identify the account
         type: String,
         required: true
+    },
+    balance: { // non negative integer
+        type: Number
+    },
+    providerType: {
+        type: String,
+        enum: [ 
+            FinancialChannelProviderType.BANK, 
+            FinancialChannelProviderType.EWALLET,
+            FinancialChannelProviderType.CASH
+        ],
+        required: true
     }
-});
+}
+
+const cashAccountSchema = new mongoose.Schema(financialAccountBase);
 
 // Inherit from financialAccountSchema
 const bankAccountSchema = new mongoose.Schema({
+    ...financialAccountBase,
+    providerID: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
+    },
     bankAccountNumber: {
         type: String,
         required: true
@@ -67,8 +91,20 @@ const bankAccountSchema = new mongoose.Schema({
 
 // Inherit from financialAccountSchema
 const ewalletAccountSchema = new mongoose.Schema({
-    ewalletAccountID: { // True Money uses Phone, Line Pay uses LineID?
+    ...financialAccountBase,
+    providerID: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
+    },
+    ewalletAccountNumber: { // True Money uses Phone, Line Pay uses LineID?
         type: String,
+        required: true
+    },
+    ewalletAccountType: {
+        type: String,
+        enum: [ 
+            EwalletAccountType.CURRENT, 
+        ],
         required: true
     }
 });
@@ -100,19 +136,22 @@ const transactionCreator = (collectionName) => {
 };
 
 const bankAccountCreator = (collectionName) => {
-    const financialAccount = mongoose.model("financial_account", financialAccountSchema, collectionName);
-    const bankAccount = financialAccount.discriminator("bank_account", bankAccountSchema, "bank_account");
+    const bankAccount = mongoose.model("bank_account", bankAccountSchema, collectionName);
     return bankAccount;
 };
 
 const ewalletAccountCreator = (collectionName) => {
-    const financialAccount = mongoose.model("financial_account", financialAccountSchema, collectionName);
-    const ewalletAccount = financialAccount.discriminator("ewallet_account", ewalletAccountSchema, "ewallet_account");
+    const ewalletAccount = mongoose.model("ewallet_account", ewalletAccountSchema, collectionName);
     return ewalletAccount;
+};
+
+const cashAccountCreator = (collectionName) => {
+    const cashAccount = mongoose.model("cash_account", cashAccountSchema, collectionName);
+    return cashAccount;
 };
 
 // this model will have only a single collection in the system as of now
 const FinancialProvider = mongoose.model("financial_provider", financialChannelProviderSchema, "financial_providers");
 
 // export functions instead. This will make a schema with collection input name
-module.exports = { transactionCreator, bankAccountCreator, ewalletAccountCreator, FinancialProvider};
+module.exports = { transactionCreator, bankAccountCreator, ewalletAccountCreator, cashAccountCreator, FinancialProvider};

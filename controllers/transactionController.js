@@ -5,12 +5,14 @@ const mongoose = require("mongoose");
 
 const addTransaction = async (req, res) => {
   try {
-    // Role check (although verifyRole middleware should have handled this)
     if (
       req.role !== BusinessRole.BUSINESS_ADMIN &&
       req.role !== BusinessRole.ACCOUNTANT
     ) {
-      return res.status(403).send("Unauthorized: Insufficient permissions");
+      return res.status(403).json({
+        "status": "error",
+        "message": "Unauthorized: User is not the admin nor an accountant"
+      });
     }
 
     const {

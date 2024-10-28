@@ -64,9 +64,14 @@ const BankAccountType = {
     FIXED_DEPOSIT: "ฝากประจำ"
 };
 
+const EwalletAccountType = {
+    E_COMMERCE: "E-commerce"
+};
+
 const FinancialChannelProviderType = {
-    BANK: "บัญชีธนาคาร",
-    EWALLET: "Ewallet"
+    BANK: "ธนาคาร",
+    EWALLET: "e-wallet",
+    CASH: "เงินสด"
 };
 
 ///////////////////////
@@ -95,6 +100,7 @@ module.exports = {
     TransactionStatus,
     TransactionType,
     BankAccountType,
+    EwalletAccountType,
     FinancialChannelProviderType,
     ContactType,
     BusinessType

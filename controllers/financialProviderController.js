@@ -16,10 +16,17 @@ const getBankProviders = async (req, res) => {
       imgUrl: provider.imgUrl,
     }));
 
-    res.status(200).json({ bankProviders: formattedProviders });
+    res.status(200).json({
+      "status": "success",
+      "message": "Return bank providers successfully",
+      "content": formattedProviders 
+    });
   } catch (err) {
-    console.error("Error in getBankProviders:", err);
-    res.status(500).send("Error retrieving bank providers: " + err.message);
+    console.error("Unexpected error at get bank provider endpoint :", err);
+    return res.status(500).json({
+      "status": "error",
+      "message": "Unexpected error at get bank provider endpoint"
+    });
   }
 };
 
@@ -37,10 +44,17 @@ const getEWalletProviders = async (req, res) => {
       imgUrl: provider.imgUrl,
     }));
 
-    res.status(200).json({ ewalletProviders: formattedProviders });
+    res.status(200).json({
+      "status": "success",
+      "message": "Return bank providers successfully",
+      "content": formattedProviders 
+    });
   } catch (err) {
-    console.error("Error in getEWalletProviders:", err);
-    res.status(500).send("Error retrieving e-wallet providers: " + err.message);
+    console.error("Unexpected error at get ewallet provider endpoint :", err);
+    return res.status(500).json({
+      "status": "error",
+      "message": "Unexpected error at get ewallet provider endpoint"
+    });
   }
 };
 

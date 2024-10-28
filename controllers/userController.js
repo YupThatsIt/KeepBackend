@@ -78,9 +78,9 @@ const updateUser = async (req, res) => {
             "status": "error",
             "message": "Incomplete input: user, email, firstName, lastName, address and phone are needed"
         });
-        if (isNaN(title)) return res.status(400).json({
+        if (Object.values(NameTitle).indexOf(title) === -1) return res.status(400).json({
             "status": "error",
-            "message": "Invalid enum: title must be enum of 0-3 only"
+            "message": "Invalid title: must be enum NameTitle"
         });
         
         // Change if imgData is anything other than a simple string

@@ -20,6 +20,7 @@ const createContact = async(req, res) =>{
         const {
             type,
             businessType,
+            contactBusinessName,
             title,
             firstName,
             lastName,
@@ -41,7 +42,7 @@ const createContact = async(req, res) =>{
             "status": "error",
             "message": "Incomplete input: firstName, lastName, phone, address, email and taxID are needed"
         });
-        const contactBusinessName = (req.contactBusinessName) ? req.contactBusinessName : "-";
+        const businessName = (contactBusinessName) ? contactBusinessName : "-";
         const imgUrl = (!imgData) ? "-" : imgData;
         
         // validate input
@@ -97,7 +98,7 @@ const createContact = async(req, res) =>{
             "contactFirstName": formattedFirstName,
             "contactLastName": formattedLastName,
             "contactPhone": phone,
-            "businessName": contactBusinessName,
+            "businessName": businessName,
             "businessType": businessType,
             "address": address,
             "email": email,

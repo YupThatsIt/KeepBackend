@@ -17,13 +17,16 @@ const documentBase = {
         required: true
     },
     businessInfo: {
-
+        
     },
     authorInfo: {
 
     },
     contactInfo: {
 
+    },
+    remark: {
+        
     },
     documentNumber: {
         type: String,

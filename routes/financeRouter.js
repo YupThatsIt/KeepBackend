@@ -24,7 +24,7 @@ const {
 
 /* 
 --------------------------------------------
-POST /business/:businessID/finance/transaction
+POST /business/:businessName/finance/transaction
 --------------------------------------------
 
 Detail: Add a new transaction to the specified business
@@ -46,21 +46,21 @@ Outputs ->  Status 201 { message: "Transaction added successfully", transaction:
 --------------------------------------------
 */
 router.post(
-  "/business/:businessID/finance/transaction",
+  "/business/:businessName/finance/transaction",
   verifyJWT,
   verifyRole,
   addTransaction
 );
 
 router.get(
-  "/business/:businessID/finance/transaction/:transactionID",
+  "/business/:businessName/finance/transaction/:transactionID",
   verifyJWT,
   verifyRole,
   getTransaction
 );
 
 router.delete(
-  "/business/:businessID/finance/transaction/:transactionID",
+  "/business/:businessName/finance/transaction/:transactionID",
   verifyJWT,
   verifyRole,
   deleteTransaction
@@ -68,7 +68,7 @@ router.delete(
 
 /* 
 --------------------------------------------
-GET /business/:businessID/finance/transactions
+GET /business/:businessName/finance/transactions
 --------------------------------------------
 
 Detail: Retrieve transactions for the given business with optional filters
@@ -81,7 +81,7 @@ Query Parameters:
 --------------------------------------------
 */
 router.get(
-  "/business/:businessID/finance/transactions",
+  "/business/:businessName/finance/transactions",
   verifyJWT,
   verifyRole,
   getTransactions
@@ -89,7 +89,7 @@ router.get(
 
 /* 
 --------------------------------------------
-POST /business/:businessID/finance/account
+POST /business/:businessName/finance/account
 --------------------------------------------
 
 Detail: Create a new financial account for the given business
@@ -106,7 +106,7 @@ Input:
 --------------------------------------------
 */
 router.post(
-  "/business/:businessID/finance/account",
+  "/business/:businessName/finance/account",
   verifyJWT,
   verifyRole,
   addFinancialAccount
@@ -114,7 +114,7 @@ router.post(
 
 /* 
 --------------------------------------------
-PUT /business/:businessID/finance/account/:accountID
+PUT /business/:businessName/finance/account/:accountID
 --------------------------------------------
 
 Detail: Update an existing financial account for the given business
@@ -130,7 +130,7 @@ Input:
 --------------------------------------------
 */
 router.put(
-  "/business/:businessID/finance/account/:accountID",
+  "/business/:businessName/finance/account/:accountID",
   verifyJWT,
   verifyRole,
   updateFinancialAccount
@@ -138,7 +138,7 @@ router.put(
 
 /* 
 --------------------------------------------
-PUT /business/:businessID/finance/account/:accountID/amount
+PUT /business/:businessName/finance/account/:accountID/amount
 --------------------------------------------
 
 Detail: Update the amount (balance) of an existing financial account
@@ -151,7 +151,7 @@ Input:
 --------------------------------------------
 */
 router.put(
-  "/business/:businessID/finance/account/:accountID/amount",
+  "/business/:businessName/finance/account/:accountID/amount",
   verifyJWT,
   verifyRole,
   updateAccountAmount
@@ -159,7 +159,7 @@ router.put(
 
 /* 
 --------------------------------------------
-DELETE /business/:businessID/finance/account/:accountID
+DELETE /business/:businessName/finance/account/:accountID
 --------------------------------------------
 
 Detail: Delete an existing financial account for the given business
@@ -170,7 +170,7 @@ Input: None (accountID in URL parameters)
 --------------------------------------------
 */
 router.delete(
-  "/business/:businessID/finance/account/:accountID",
+  "/business/:businessName/finance/account/:accountID",
   verifyJWT,
   verifyRole,
   deleteFinancialAccount
@@ -178,7 +178,7 @@ router.delete(
 
 /* 
 --------------------------------------------
-GET /business/:businessID/finance/accounts
+GET /business/:businessName/finance/accounts
 --------------------------------------------
 
 Detail: Retrieve all financial accounts for the given business
@@ -186,7 +186,7 @@ Detail: Retrieve all financial accounts for the given business
 --------------------------------------------
 */
 router.get(
-  "/business/:businessID/finance/accounts",
+  "/business/:businessName/finance/accounts",
   verifyJWT,
   verifyRole,
   listFinancialAccounts
@@ -194,7 +194,7 @@ router.get(
 
 /* 
 --------------------------------------------
-GET /business/:businessID/finance/account/:accountID
+GET /business/:businessName/finance/account/:accountID
 --------------------------------------------
 
 Detail: Retrieve details of a specific financial account for the given business
@@ -203,7 +203,7 @@ Detail: Retrieve details of a specific financial account for the given business
 --------------------------------------------
 */
 router.get(
-  "/business/:businessID/finance/account/:accountID",
+  "/business/:businessName/finance/account/:accountID",
   verifyJWT,
   verifyRole,
   getFinancialAccount
