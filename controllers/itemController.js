@@ -330,7 +330,10 @@ const updateItemQuantity = async (req, res) => {
       req.role !== BusinessRole.BUSINESS_ADMIN &&
       req.role !== BusinessRole.ACCOUNTANT
     ) {
-      return res.status(403).send("Unauthorized: Insufficient permissions");
+      return res.status(403).json({
+        status: "error",
+        message: "Unauthorized: Insufficient permissions"
+      });
     }
 
     const { businessID, itemID } = req.params;
@@ -338,9 +341,10 @@ const updateItemQuantity = async (req, res) => {
 
     // Validate quantity
     if (quantity === undefined || quantity < 0) {
-      return res
-        .status(400)
-        .send("Invalid quantity: must be a non-negative number");
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid quantity: must be a non-negative number"
+      });
     }
 
     const Item = itemCreator(`items::${businessID}`);
@@ -357,15 +361,24 @@ const updateItemQuantity = async (req, res) => {
       }
     );
 
-    if (!updatedItem) {
-      return res.status(404).send("Item not found");
+    if (!updatedItem){
+      return res.status(404).json({
+        status: "error",
+        message: "Item not found"
+      });
     }
 
     // Just return success message
-    res.status(200).send("Item quantity updated successfully");
+    res.status(200).json({
+      status: "success",
+      message: "Item quantity updated successfully"
+    });
   } catch (err) {
     console.error("Error in updateItemQuantity:", err);
-    res.status(500).send("Error updating item quantity: " + err.message);
+    res.status(500).json({
+      status: "error",
+      message: "Error updating item quantity: " + err.message
+    });
   }
 };
 
