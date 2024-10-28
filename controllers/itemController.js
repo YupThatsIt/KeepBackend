@@ -291,7 +291,10 @@ const getItemById = async (req, res) => {
     });
 
     if (!item) {
-      return res.status(404).send("Item not found");
+      return res.status(404).json({
+        status: "error",
+        message: "Item not found"
+      });
     }
 
     // Format the response
@@ -305,12 +308,20 @@ const getItemById = async (req, res) => {
       imgUrl: item.imgUrl,
     };
 
-    res.status(200).json({ item: formattedItem });
+    res.status(200).json({
+      status: "success",
+      message: "Item retrieved successfully",
+      content: formattedItem
+    });
   } catch (err) {
     console.error("Error in getItemById:", err);
-    res.status(500).send("Error retrieving item: " + err.message);
+    res.status(500).json({
+      status: "error",
+      message: "Error retrieving item: " + err.message
+    });
   }
 };
+
 
 const updateItemQuantity = async (req, res) => {
   try {
