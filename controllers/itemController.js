@@ -89,12 +89,14 @@ const createItem = async (req, res) => {
 };
 
 
+
 const updateItem = async (req, res) => {
   try {
+    // Check if user has proper role (Admin or Accountant)
     if (
       req.role !== BusinessRole.BUSINESS_ADMIN &&
       req.role !== BusinessRole.ACCOUNTANT
-    ) {
+    )  {
       return res.status(403).json({
         status: "error",
         message: "Unauthorized: Insufficient permissions"
@@ -104,6 +106,7 @@ const updateItem = async (req, res) => {
     const { businessID, itemID } = req.params;
     const { itemName, itemDescription, quantity, unitType, imgData } = req.body;
 
+    // Validate input
     if (!itemName || quantity === undefined) {
       return res.status(400).json({
         status: "error",
@@ -111,7 +114,8 @@ const updateItem = async (req, res) => {
       });
     }
 
-    if (quantity < 0) {
+    // Validate quantity is non-negative
+    if (quantity < 0){
       return res.status(400).json({
         status: "error",
         message: "Quantity must be non-negative"
@@ -120,6 +124,7 @@ const updateItem = async (req, res) => {
 
     const Item = itemCreator(`items::${businessID}`);
 
+    // Check if item exists
     const existingItem = await Item.findOne({
       _id: itemID,
       businessID: businessID,
@@ -131,7 +136,7 @@ const updateItem = async (req, res) => {
         message: "Item not found"
       });
     }
-
+    // Check for duplicate item name (excluding current item)
     const duplicateItem = await Item.findOne({
       businessID: businessID,
       itemName: itemName,
@@ -145,8 +150,10 @@ const updateItem = async (req, res) => {
       });
     }
 
+    // Set default imgUrl if no imgData provided
     const imgUrl = imgData || existingItem.imgUrl;
 
+    // Update item
     const updatedItem = await Item.findOneAndUpdate(
       { _id: itemID, businessID: businessID },
       {
@@ -157,7 +164,7 @@ const updateItem = async (req, res) => {
         unitType,
         imgUrl,
       },
-      { new: true }
+      { new: true } // Return the updated document
     );
 
     res.status(200).json({
@@ -165,7 +172,7 @@ const updateItem = async (req, res) => {
       message: "Item updated successfully",
       content: updatedItem
     });
-  } catch (err) {
+  } catch (err){
     console.error("Error in updateItem:", err);
     res.status(500).json({
       status: "error",
@@ -174,47 +181,38 @@ const updateItem = async (req, res) => {
   }
 };
 
-
 const deleteItem = async (req, res) => {
   try {
+    // Check if user has proper role (Admin or Accountant)
     if (
       req.role !== BusinessRole.BUSINESS_ADMIN &&
       req.role !== BusinessRole.ACCOUNTANT
     ) {
-      return res.status(403).json({
-        status: "error",
-        message: "Unauthorized: Insufficient permissions"
-      });
+      return res.status(403).send("Unauthorized: Insufficient permissions");
     }
 
     const { businessID, itemID } = req.params;
+
     const Item = itemCreator(`items::${businessID}`);
 
+    // Find and delete the item
     const deletedItem = await Item.findOneAndDelete({
       _id: itemID,
       businessID: businessID,
     });
 
     if (!deletedItem) {
-      return res.status(404).json({
-        status: "error",
-        message: "Item not found"
-      });
+      return res.status(404).send("Item not found");
     }
 
     res.status(200).json({
-      status: "success",
-      message: "Item deleted successfully"
+      message: "Item deleted successfully",
     });
   } catch (err) {
     console.error("Error in deleteItem:", err);
-    res.status(500).json({
-      status: "error",
-      message: "Error deleting item: " + err.message
-    });
+    res.status(500).send("Error deleting item: " + err.message);
   }
 };
-
 
 const getItemsByType = async (req, res) => {
   try {
