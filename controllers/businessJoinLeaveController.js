@@ -105,7 +105,8 @@ const joinBusiness = async (req, res) => {
         memberNumberArr.sort();
         const newMemberID = newMemberNumber(memberNumberArr);
 
-        foundBusiness.viewers.push({
+        // update user in business
+        foundBusiness.accountants.push({
             "userID": userID,
             "memberNumber": newMemberID
         })
@@ -114,7 +115,7 @@ const joinBusiness = async (req, res) => {
         // update User
         foundUser.businessRoles.push({
             businessID: businessID,
-            role: BusinessRole.VIEWER
+            role: BusinessRole.ACCOUNTANT
         })
         await foundUser.save();
 
@@ -157,6 +158,7 @@ const leaveBusiness = async (req, res) => {
         });
 
         // delete id in Business
+        // tertinary is quite bad actually. When we implement more role into our system, then everything could break.
         const role = (req.role === BusinessRole.ACCOUNTANT) ? "accountants" : "viewers";
         await Business.findOneAndUpdate({ "_id": businessID } ,{
             $pull: { 

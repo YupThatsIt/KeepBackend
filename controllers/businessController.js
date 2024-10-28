@@ -48,7 +48,6 @@ const createBusiness = async(req, res) =>{
 
         // check duplication
         const foundBusiness = await Business.findOne({ $or: [{"phone": phone}, 
-                                                            {"address": address},
                                                             {$and: [{"name": name}, {"branch": branchName}]}
                                                             // {$and: [{"name": name}, {"branch" : {$ne: branchName}}, { "taxID" : {$ne: taxID}}]},
                                                             // {$and: [{"name": {$ne: name}}, {"taxID": taxID}]}
@@ -225,8 +224,7 @@ const updateBusiness = async (req, res) => {
         });
 
         const foundBusiness = await Business.findOne({ $and: 
-                                                        [{$or: [{"phone": phone}, 
-                                                                {"address": address},
+                                                        [{$or: [{"phone": phone},
                                                                 {$and: [{"name": name}, {"branch": branchName}]}
                                                                 // {$and: [{"name": name}, {"branch" : {$ne: branchName}}, { "taxID" : {$ne: taxID}}]},
                                                                 // {$and: [{"name": {$ne: name}}, {"taxID": taxID}]}
