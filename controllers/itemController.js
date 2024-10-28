@@ -9,7 +9,10 @@ const createItem = async (req, res) => {
       req.role !== BusinessRole.BUSINESS_ADMIN &&
       req.role !== BusinessRole.ACCOUNTANT
     ) {
-      return res.status(403).send("Unauthorized: Insufficient permissions");
+      return res.status(403).json({
+        status: "error",
+        message: "Unauthorized: Insufficient permissions",
+      });
     }
 
     const { itemName, itemDescription, itemType, quantity, unitType, imgData } =
@@ -17,17 +20,26 @@ const createItem = async (req, res) => {
 
     // Validate required fields
     if (!itemName || itemType === undefined || quantity === undefined) {
-      return res.status(400).send("Input is incomplete");
+      return res.status(400).json({
+        status: "error",
+        message: "Input is incomplete",
+      });
     }
 
     // Validate itemType
     if (!Object.values(ItemType).includes(itemType)) {
-      return res.status(400).send("Invalid item type");
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid item type",
+      });
     }
 
     // Validate quantity is non-negative
     if (quantity < 0) {
-      return res.status(400).send("Quantity must be non-negative");
+      return res.status(400).json({
+        status: "error",
+        message: "Quantity must be non-negative",
+      });
     }
 
     const Item = itemCreator(`items::${req.businessID}`);
@@ -39,7 +51,10 @@ const createItem = async (req, res) => {
     });
 
     if (existingItem) {
-      return res.status(400).send("Item name already exists");
+      return res.status(400).json({
+        status: "error",
+        message: "Item name already exists",
+      });
     }
 
     // Set default imgUrl if no imgData provided
@@ -60,12 +75,16 @@ const createItem = async (req, res) => {
     await newItem.save();
 
     res.status(201).json({
+      status: "success",
       message: "Item created successfully",
-      item: newItem,
+      content: newItem,
     });
   } catch (err) {
     console.error("Error in createItem:", err);
-    res.status(500).send("Error creating item: " + err.message);
+    res.status(500).json({
+      status: "error",
+      message: "Error creating item: " + err.message,
+    });
   }
 };
 
@@ -143,7 +162,6 @@ const updateItem = async (req, res) => {
   }
 };
 
-
 const deleteItem = async (req, res) => {
   try {
     // Check if user has proper role (Admin or Accountant)
@@ -176,7 +194,6 @@ const deleteItem = async (req, res) => {
     res.status(500).send("Error deleting item: " + err.message);
   }
 };
-
 
 const getItemsByType = async (req, res) => {
   try {
@@ -223,7 +240,6 @@ const getItemsByType = async (req, res) => {
   }
 };
 
-
 const getItemById = async (req, res) => {
   try {
     const { businessID, itemID } = req.params;
@@ -256,7 +272,6 @@ const getItemById = async (req, res) => {
     res.status(500).send("Error retrieving item: " + err.message);
   }
 };
-
 
 const updateItemQuantity = async (req, res) => {
   try {
@@ -303,7 +318,6 @@ const updateItemQuantity = async (req, res) => {
     res.status(500).send("Error updating item quantity: " + err.message);
   }
 };
-
 
 module.exports = {
   createItem,
