@@ -42,7 +42,16 @@ const createContact = async(req, res) =>{
             "status": "error",
             "message": "Incomplete input: firstName, lastName, phone, address, email and taxID are needed"
         });
-        const businessName = (contactBusinessName) ? contactBusinessName : "-";
+
+        let businessName;
+        if (businessType === BusinessType.COOPERATE) {
+            if (!contactBusinessName) res.status(400).json({
+                "status": "error",
+                "message": "Incomplete input: business name are needed for cooperate type"
+            });
+            businessName = contactBusinessName;
+        }
+        else businessName = "-";
         const imgUrl = (!imgData) ? "-" : imgData;
         
         // validate input
@@ -66,22 +75,23 @@ const createContact = async(req, res) =>{
             "status": "error",
             "message": "Invalid email"
         });
-        if (Object.values(ContactType).indexOf(type) > -1) return res.status(400).json({
+        
+        if (!Object.values(ContactType).includes(type)) return res.status(400).json({
             "status": "error",
             "message": "Invalid type: must be enum ContactType"
         });
-        if (Object.values(NameTitle).indexOf(title) > -1) return res.status(400).json({
+        if (!Object.values(NameTitle).includes(title)) return res.status(400).json({
             "status": "error",
             "message": "Invalid title: must be enum NameTitle"
         });
-        if (Object.values(BusinessType).indexOf(businessType) > -1) return res.status(400).json({
+        if (!Object.values(BusinessType).includes(businessType)) return res.status(400).json({
             "status": "error",
             "message": "Invalid title: must be enum businessType"
         });
 
         // check for duplicated information
         const foundContact = await Contact.findOne({ $or: [{"phone": phone}, {"email": email}]});
-        if (foundContact) return res.send(403).json({
+        if (foundContact) return res.send(409).json({
             "status": "error",
             "message": "Phone or email is already taken"
         });
@@ -174,6 +184,7 @@ const getContacts = async (req, res) => {
                 }
             }
             catch(err) {
+                console.error("Error at get contacts :", err);
                 return res.status(500).json({
                     "status": "error",
                     "message": "Can't get contacts"
@@ -206,7 +217,7 @@ const viewContact = async (req, res) => {
         const Contact = contactCreator(`contacts::${req.businessID}`);
 
         const foundContact = await Contact.findOne({"_id": contactID});
-        if (!foundContact) return res.status(403).json({
+        if (!foundContact) return res.status(404).json({
             "status": "error",
             "message": "No contact found"
         })
@@ -305,22 +316,22 @@ const updateContact = async (req, res) => {
             "status": "error",
             "message": "Invalid email"
         });
-        if (Object.values(ContactType).indexOf(type) > -1) return res.status(400).json({
+        if (!Object.values(ContactType).includes(type)) return res.status(400).json({
             "status": "error",
             "message": "Invalid type: must be enum ContactType"
         });
-        if (Object.values(NameTitle).indexOf(title) > -1) return res.status(400).json({
+        if (!Object.values(NameTitle).includes(title)) return res.status(400).json({
             "status": "error",
             "message": "Invalid title: must be enum NameTitle"
         });
-        if (Object.values(BusinessType).indexOf(businessType) > -1) return res.status(400).json({
+        if (!Object.values(BusinessType).includes(businessType)) return res.status(400).json({
             "status": "error",
             "message": "Invalid title: must be enum businessType"
         });
 
         // check for duplicated information from other contacts
         const foundContact = await Contact.findOne({$and: [{$or: [{"phone": phone}, {"email": email}]}, {"_id": {$ne: contactID}}]});
-        if (foundContact) return res.send(403).json({
+        if (foundContact) return res.send(409).json({
             "status": "error",
             "message": "Phone or email is already taken"
         });

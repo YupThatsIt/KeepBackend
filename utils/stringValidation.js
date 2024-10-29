@@ -13,7 +13,7 @@ const validateNameEN = (name) => {
 };
 
 const validateName = (name) => {
-  return String(name).toLowerCase().match(/^[a-zA-Zก-ฮ]+$/);
+  return String(name).toLowerCase().match(/^[a-zA-Z\u0E00-\u0E7F]+$/);
 };
 
 const validatePhone = (phone) => {
