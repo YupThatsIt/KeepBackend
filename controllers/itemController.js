@@ -24,6 +24,7 @@ const createItem = async (req, res) => {
       itemName,
       itemDescription,
       itemType,
+      price,
       imgData
     } = req.body;
 
@@ -36,12 +37,16 @@ const createItem = async (req, res) => {
       
     
     // Validate required field
-    if (!itemName || itemType === undefined || isNaN(quantity)) {
-      return res.status(400).json({
+    if (
+      !itemName ||
+      !itemType ||
+      !price ||
+      isNaN(price) ||
+      !Number.isInteger(quantity)
+    ) return res.status(400).json({
         "status": "error",
         "message": "Input is incomplete"
       });
-    }
 
     // Validate itemType
     if (!Object.values(ItemType).includes(itemType)) {
@@ -51,7 +56,14 @@ const createItem = async (req, res) => {
       });
     }
 
-    // Validate quantity is non-negative
+    // Validate quantity and price. They must be non-negative
+    if (price < 0) {
+      return res.status(400).json({
+        "status": "error",
+        "message": "Price must be non-negative"
+      });
+    }
+
     if (quantity < 0) {
       return res.status(400).json({
         "status": "error",
@@ -63,12 +75,11 @@ const createItem = async (req, res) => {
 
     // Check for duplicate item name
     const existingItem = await Item.findOne({
-      businessID: req.businessID,
       itemName: itemName,
     });
 
     if (existingItem) {
-      return res.status(400).json({
+      return res.status(409).json({
         "status": "error",
         "message": "Item name already exists"
       });
@@ -84,6 +95,7 @@ const createItem = async (req, res) => {
       itemType,
       quantityOnHand: quantity,
       quantityForInvoice: 0,
+      price,
       unitType,
       imgUrl,
     });
@@ -92,8 +104,7 @@ const createItem = async (req, res) => {
 
     res.status(201).json({
       "status": "success",
-      "message": "Item created successfully",
-      "content": newItem
+      "message": "Item created successfully"
     });
   } catch (err) {
     console.error("Error in createItem:", err);
@@ -127,6 +138,7 @@ const updateItem = async (req, res) => {
     const {
       itemName,
       itemDescription,
+      price,
       imgData
      } = req.body;
 
@@ -138,7 +150,7 @@ const updateItem = async (req, res) => {
      }
      
      // Validate input
-    if (!itemName || isNaN(quantity)) {
+    if (!itemName || !price || isNaN(quantity) || !Number.isInteger(price)) {
       return res.status(400).json({
         status: "error",
         message: "Input is incomplete"
@@ -150,6 +162,13 @@ const updateItem = async (req, res) => {
       return res.status(400).json({
         status: "error",
         message: "Quantity must be non-negative"
+      });
+    }
+
+    if (price < 0){
+      return res.status(400).json({
+        status: "error",
+        message: "Price must be non-negative"
       });
     }
 
@@ -172,14 +191,14 @@ const updateItem = async (req, res) => {
     });
 
     if (duplicateItem) {
-      return res.status(400).json({
+      return res.status(409).json({
         status: "error",
         message: "Item name already exists"
       });
     }
 
     // Set default imgUrl if no imgData provided
-    const imgUrl = imgData || existingItem.imgUrl;
+    const imgUrl = imgData || "-";
 
     // Update item
     const updatedItem = await Item.findOneAndUpdate(
@@ -189,6 +208,7 @@ const updateItem = async (req, res) => {
         itemDescription,
         quantityOnHand: quantity,
         unitType,
+        price,
         imgUrl,
       },
       { new: true } // Return the updated document
@@ -196,8 +216,7 @@ const updateItem = async (req, res) => {
 
     res.status(200).json({
       status: "success",
-      message: "Item updated successfully",
-      content: updatedItem
+      message: "Item updated successfully"
     });
   } catch (err){
     console.error("Error in updateItem:", err);
@@ -284,6 +303,7 @@ const getItemsByType = async (req, res) => {
       itemDescription: item.itemDescription,
       itemType: item.itemType,
       quantity: item.quantityOnHand,
+      price: item.price,
       unitType: item.unitType,
       imgUrl: item.imgUrl,
     }));
@@ -326,6 +346,7 @@ const getItemById = async (req, res) => {
       itemDescription: item.itemDescription,
       itemType: item.itemType,
       quantity: item.quantityOnHand,
+      price: item.price,
       unitType: item.unitType,
       imgUrl: item.imgUrl,
     };

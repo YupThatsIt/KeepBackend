@@ -31,6 +31,10 @@ const itemSchema = new mongoose.Schema({
     unitType: {
         type: String
     },
+    price: {
+        type: Number,
+        required: true
+    },
     imgUrl: {
         type: String
     }
