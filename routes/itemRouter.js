@@ -24,16 +24,18 @@ Input: {
     "itemName": String,
     "itemDescription": String,
     "itemType": Number, // Enum (PRODUCT, SERVICE)
-    "quantity": Number,
+    "quantity": Number, (Integer)
     "unitType": String,
+    "price": Number,
     "imgData": String // optional
 }
 
 Outputs:  
-    Status 201 { message: "Item created successfully", item: Object }
+    Status 201 { message: "Item created successfully" }
     Status 400 "Input is incomplete"
     Status 401 Unauthorized (no token)
     Status 403 Forbidden (insufficient permissions)
+    Status 409 Conflict data (like product name)
     Status 500 Server error
 --------------------------------------------
 */
@@ -52,14 +54,16 @@ Input: {
     "itemDescription": String,
     "quantity": Number,
     "unitType": String,
+    "price": Number,
     "imgData": String // optional
 }
 
 Outputs:  
-    Status 200 { message: "Item updated successfully", item: Object }
+    Status 200 { message: "Item updated successfully" }
     Status 400 "Input is incomplete" | "Item not found"
     Status 401 Unauthorized (no token)
     Status 403 Forbidden (insufficient permissions)
+    Status 409 Conflict data (like product name)
     Status 500 Server error
 --------------------------------------------
 */
@@ -101,10 +105,10 @@ GET /business/:businessName/item?type={type}
 --------------------------------------------
 
 Detail: Get items filtered by type
-        type can be 'product', 'service', or 'all'
+        type can be 'product', 'service' or just leave empty for all
 
 Query Parameters:
-    type: String ('product', 'service', or 'all')
+    type: String ('product', 'service')
 
 Outputs:  
     Status 200 { items: Array of item objects }
@@ -136,15 +140,17 @@ router.get(
 PUT /business/:businessName/item/:itemID/quantity
 --------------------------------------------
 
-Detail: Update only the quantity of a specific item
-        Only accessible by Admin and Accountant roles
+Detail: This will add the quantity amount on top of the existing amount 
+        (Not changing but rather adding more amount on top, add in subtract out)
+        positive integer for adding
+        negative integer for subtracting
 
 Input: {
     "quantity": Number
 }
 
 Outputs:  
-    Status 200 { message: "Item quantity updated successfully", item: Object }
+    Status 200 { message: "Item quantity updated successfully" }
     Status 400 Invalid quantity
     Status 401 Unauthorized (no token)
     Status 403 Forbidden (insufficient permissions)
