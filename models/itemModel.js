@@ -5,10 +5,6 @@ const { ItemType } = require("../enum");
 
 // Item schema
 const itemSchema = new mongoose.Schema({
-    businessID: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true
-    },
     itemName: {
         type: String,
         required: true,

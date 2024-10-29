@@ -2,6 +2,7 @@
 const { itemCreator } = require("../models/itemModel");
 const { BusinessRole, ItemType } = require("../enum");
 
+
 const createItem = async (req, res) => {
   try {
     // Check if user has proper role (Admin or Accountant)
@@ -15,30 +16,46 @@ const createItem = async (req, res) => {
       });
     }
 
-    const { itemName, itemDescription, itemType, quantity, unitType, imgData } =
-      req.body;
+    let {
+      quantity,
+      unitType
+    } = req.body;
+    const {
+      itemName,
+      itemDescription,
+      itemType,
+      imgData
+    } = req.body;
 
-    // Validate required fields
-    if (!itemName || itemType === undefined || quantity === undefined) {
+    // change values accordingly
+    if (quantity === undefined) quantity = 0;
+    if (unitType === ItemType.SERVICE){
+      quantity = 1;
+      unitType = "-";
+    }
+      
+    
+    // Validate required field
+    if (!itemName || itemType === undefined || isNaN(quantity)) {
       return res.status(400).json({
-        status: "error",
-        message: "Input is incomplete"
+        "status": "error",
+        "message": "Input is incomplete"
       });
     }
 
     // Validate itemType
     if (!Object.values(ItemType).includes(itemType)) {
       return res.status(400).json({
-        status: "error",
-        message: "Invalid item type"
+        "status": "error",
+        "message": "Invalid item type"
       });
     }
 
     // Validate quantity is non-negative
     if (quantity < 0) {
       return res.status(400).json({
-        status: "error",
-        message: "Quantity must be non-negative"
+        "status": "error",
+        "message": "Quantity must be non-negative"
       });
     }
 
@@ -52,8 +69,8 @@ const createItem = async (req, res) => {
 
     if (existingItem) {
       return res.status(400).json({
-        status: "error",
-        message: "Item name already exists"
+        "status": "error",
+        "message": "Item name already exists"
       });
     }
 
@@ -62,12 +79,11 @@ const createItem = async (req, res) => {
 
     // Create new item with quantity assigned to both fields
     const newItem = new Item({
-      businessID: req.businessID,
       itemName,
       itemDescription,
       itemType,
       quantityOnHand: quantity,
-      quantityForInvoice: quantity,
+      quantityForInvoice: 0,
       unitType,
       imgUrl,
     });
@@ -75,9 +91,9 @@ const createItem = async (req, res) => {
     await newItem.save();
 
     res.status(201).json({
-      status: "success",
-      message: "Item created successfully",
-      content: newItem
+      "status": "success",
+      "message": "Item created successfully",
+      "content": newItem
     });
   } catch (err) {
     console.error("Error in createItem:", err);
@@ -87,7 +103,6 @@ const createItem = async (req, res) => {
     });
   }
 };
-
 
 
 const updateItem = async (req, res) => {
@@ -103,11 +118,27 @@ const updateItem = async (req, res) => {
       });
     }
 
-    const { businessID, itemID } = req.params;
-    const { itemName, itemDescription, quantity, unitType, imgData } = req.body;
+    const businessID = req.businessID;
+    const itemID = req.params.itemID;
+    let {
+      quantity,
+      unitType
+    } = req.body;
+    const {
+      itemName,
+      itemDescription,
+      imgData
+     } = req.body;
 
-    // Validate input
-    if (!itemName || quantity === undefined) {
+     // change values accordingly
+     if (quantity === undefined) quantity = 0;
+     if (unitType === ItemType.SERVICE) {
+      quantity = 1;
+      unitType = "-";
+     }
+     
+     // Validate input
+    if (!itemName || isNaN(quantity)) {
       return res.status(400).json({
         status: "error",
         message: "Input is incomplete"
@@ -125,10 +156,7 @@ const updateItem = async (req, res) => {
     const Item = itemCreator(`items::${businessID}`);
 
     // Check if item exists
-    const existingItem = await Item.findOne({
-      _id: itemID,
-      businessID: businessID,
-    });
+    const existingItem = await Item.findOne({"_id": itemID});
 
     if (!existingItem) {
       return res.status(404).json({
@@ -136,9 +164,9 @@ const updateItem = async (req, res) => {
         message: "Item not found"
       });
     }
+
     // Check for duplicate item name (excluding current item)
     const duplicateItem = await Item.findOne({
-      businessID: businessID,
       itemName: itemName,
       _id: { $ne: itemID },
     });
@@ -155,12 +183,11 @@ const updateItem = async (req, res) => {
 
     // Update item
     const updatedItem = await Item.findOneAndUpdate(
-      { _id: itemID, businessID: businessID },
+      { "_id": itemID },
       {
         itemName,
         itemDescription,
         quantityOnHand: quantity,
-        quantityForInvoice: quantity,
         unitType,
         imgUrl,
       },
@@ -181,6 +208,7 @@ const updateItem = async (req, res) => {
   }
 };
 
+
 const deleteItem = async (req, res) => {
   try {
     // Check if user has proper role (Admin or Accountant)
@@ -194,22 +222,14 @@ const deleteItem = async (req, res) => {
       });
     }
 
-    const { businessID, itemID } = req.params;
+    const businessID = req.businessID;
+    const itemID = req.params.itemID;
 
     const Item = itemCreator(`items::${businessID}`);
 
     // Find and delete the item
-    const deletedItem = await Item.findOneAndDelete({
-      _id: itemID,
-      businessID: businessID,
-    });
-
-    if (!deletedItem) {
-      return res.status(404).json({
-        status: "error",
-        message: "Item not found"
-      });
-    }
+    const foundItem = await Item.findOne({"_id": itemID});
+    if (foundItem) await Item.deleteOne({"_id": itemID});
 
     res.status(200).json({
       status: "success",
@@ -227,31 +247,35 @@ const deleteItem = async (req, res) => {
 
 const getItemsByType = async (req, res) => {
   try {
-    const { businessID } = req.params;
-    const { type } = req.query;
+    const businessID = req.businessID;
 
-    // Validate type parameter
-    if (!type || !["product", "service", "all"].includes(type.toLowerCase())) {
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid type parameter. Must be 'product', 'service', or 'all'"
-      });
+    const queryOptions = [];
+    if (req.query.type instanceof Array) queryOptions.push(...req.query.type);
+    else if (req.query.type) queryOptions.push(req.query.type);
+
+    const itemTypes = [];
+    if (queryOptions.length !== 0) {
+        for (let i = 0; i < queryOptions.length; i++){
+            switch (queryOptions[i].toLowerCase()) {
+                case "product":
+                    if (itemTypes.indexOf(ItemType.PRODUCT) === -1) itemTypes.push(ItemType.PRODUCT);
+                    break;
+                case "service":
+                    if (itemTypes.indexOf(ItemType.SERVICE) === -1) itemTypes.push(ItemType.SERVICE);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
+    else itemTypes.push(ItemType.PRODUCT, ItemType.SERVICE);
 
     const Item = itemCreator(`items::${businessID}`);
 
-    // Build query
-    let query = { businessID: businessID };
-
-    // Add type filter if not 'all'
-    if (type.toLowerCase() !== "all") {
-      const itemType =
-        type.toLowerCase() === "product" ? ItemType.PRODUCT : ItemType.SERVICE;
-      query.itemType = itemType;
-    }
-
     // Get items
-    const items = await Item.find(query);
+    const items = await Item.find({"itemType": {$in: itemTypes}});
+
+    console.log(items);
 
     // Format the response
     const formattedItems = items.map((item) => ({
@@ -281,14 +305,12 @@ const getItemsByType = async (req, res) => {
 
 const getItemById = async (req, res) => {
   try {
-    const { businessID, itemID } = req.params;
+    const businessID = req.businessID;
+    const itemID = req.params.itemID;
 
     const Item = itemCreator(`items::${businessID}`);
 
-    const item = await Item.findOne({
-      _id: itemID,
-      businessID: businessID,
-    });
+    const item = await Item.findOne({"_id": itemID,});
 
     if (!item) {
       return res.status(404).json({
@@ -336,37 +358,36 @@ const updateItemQuantity = async (req, res) => {
       });
     }
 
-    const { businessID, itemID } = req.params;
-    const { quantity } = req.body;
+    const businessID = req.businessID;
+    const itemID = req.params.itemID;
 
+    const { quantity } = req.body;
     // Validate quantity
-    if (quantity === undefined || quantity < 0) {
+    if (quantity === undefined || !Number.isInteger(quantity)) {
       return res.status(400).json({
         status: "error",
-        message: "Invalid quantity: must be a non-negative number"
+        message: "Invalid quantity: must be an integer"
       });
     }
 
     const Item = itemCreator(`items::${businessID}`);
 
     // Find and update the item
-    const updatedItem = await Item.findOneAndUpdate(
-      {
-        _id: itemID,
-        businessID: businessID,
-      },
-      {
-        quantityOnHand: quantity,
-        quantityForInvoice: quantity,
-      }
-    );
+    const foundItem = await Item.findOne({"_id": itemID});
 
-    if (!updatedItem){
+    if (!foundItem){
       return res.status(404).json({
         status: "error",
         message: "Item not found"
       });
     }
+
+    if (foundItem.quantityOnHand + quantity < 0) return res.status(400).json({
+      status: "error",
+      message: "quantity on hand is below 0"
+    })
+    foundItem.quantityOnHand += quantity;
+    await foundItem.save()
 
     // Just return success message
     res.status(200).json({

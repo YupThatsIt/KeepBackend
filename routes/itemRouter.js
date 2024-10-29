@@ -14,7 +14,7 @@ const {
 
 /* 
 --------------------------------------------
-POST /business/:businessID/item
+POST /business/:businessName/item
 --------------------------------------------
 
 Detail: Create a new item for the specified business
@@ -37,11 +37,11 @@ Outputs:
     Status 500 Server error
 --------------------------------------------
 */
-router.post("/business/:businessID/item", verifyJWT, verifyRole, createItem);
+router.post("/business/:businessName/item", verifyJWT, verifyRole, createItem);
 
 /* 
 --------------------------------------------
-PUT /business/:businessID/item/:itemID
+PUT /business/:businessName/item/:itemID
 --------------------------------------------
 
 Detail: Update an item's details (cannot change itemType)
@@ -64,7 +64,7 @@ Outputs:
 --------------------------------------------
 */
 router.put(
-  "/business/:businessID/item/:itemID",
+  "/business/:businessName/item/:itemID",
   verifyJWT,
   verifyRole,
   updateItem
@@ -72,7 +72,7 @@ router.put(
 
 /* 
 --------------------------------------------
-DELETE /business/:businessID/item/:itemID
+DELETE /business/:businessName/item/:itemID
 --------------------------------------------
 
 Detail: Delete an item from the business
@@ -89,7 +89,7 @@ Outputs:
 --------------------------------------------
 */
 router.delete(
-  "/business/:businessID/item/:itemID",
+  "/business/:businessName/item/:itemID",
   verifyJWT,
   verifyRole,
   deleteItem
@@ -97,7 +97,7 @@ router.delete(
 
 /* 
 --------------------------------------------
-GET /business/:businessID/item?type={type}
+GET /business/:businessName/item?type={type}
 --------------------------------------------
 
 Detail: Get items filtered by type
@@ -114,18 +114,18 @@ Outputs:
     Status 500 Server error
 --------------------------------------------
 */
-router.get("/business/:businessID/item", verifyJWT, verifyRole, getItemsByType);
+router.get("/business/:businessName/items", verifyJWT, verifyRole, getItemsByType);
 
 /* 
 --------------------------------------------
-GET /business/:businessID/item/:itemID
+GET /business/:businessName/item/:itemID
 --------------------------------------------
 
 Detail: Get details of a specific item by its ID
 --------------------------------------------
 */
 router.get(
-  "/business/:businessID/item/:itemID",
+  "/business/:businessName/item/:itemID",
   verifyJWT,
   verifyRole,
   getItemById
@@ -133,7 +133,7 @@ router.get(
 
 /* 
 --------------------------------------------
-PUT /business/:businessID/item/:itemID/quantity
+PUT /business/:businessName/item/:itemID/quantity
 --------------------------------------------
 
 Detail: Update only the quantity of a specific item
@@ -153,7 +153,7 @@ Outputs:
 --------------------------------------------
 */
 router.put(
-  "/business/:businessID/item/:itemID/quantity",
+  "/business/:businessName/item/:itemID/quantity",
   verifyJWT,
   verifyRole,
   updateItemQuantity
