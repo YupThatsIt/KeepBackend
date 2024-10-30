@@ -186,7 +186,7 @@ const taxInvoiceCreator = (collectionName) => {
 };
 
 const receiptCreator = (collectionName) => {
-    return mongoose.model("quotations", receiptSchema, collectionName);
+    return mongoose.model("receipts", receiptSchema, collectionName);
 };
 
 const purchaseOrderCreator = (collectionName) => {

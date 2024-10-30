@@ -10,7 +10,8 @@ const { Business } = require("../models/businessModel");
 const {
     DocumentStatus,
     DocumentType,
-    BusinessRole
+    BusinessRole,
+    BusinessType
 } = require("../enum");
 const { daysToMilliSeconds } = require("../utils/timeCalculation");
 const { haveSameFields } = require("../utils/fieldCheck");
@@ -379,11 +380,79 @@ const getDocument = async(req, res) =>{
 
 const listDocuments = async(req, res) =>{
     try {
+        // get the qeury first
+        const queryOptions = [];
+        if (req.query.type instanceof Array) queryOptions.push(...req.query.type);
+        else if (req.query.type) queryOptions.push(req.query.type);
+
+        const documentTypes = [];
+        if (queryOptions.length !== 0) {
+            for (let i = 0; i < queryOptions.length; i++){
+                switch (queryOptions[i].toLowerCase()) {
+                    case "quotation":
+                        if (documentTypes.indexOf(DocumentType.QUOTATION) === -1) documentTypes.push(DocumentType.QUOTATION);
+                        break;
+                    case "invoice":
+                        if (documentTypes.indexOf(DocumentType.INVOICE) === -1) documentTypes.push(DocumentType.INVOICE);
+                        break;
+                    case "receipt":
+                        if (documentTypes.indexOf(DocumentType.RECEIPT) === -1) documentTypes.push(DocumentType.RECEIPT);
+                        break;
+                    case "purchase-order":
+                        if (documentTypes.indexOf(DocumentType.PURCHASE_ORDER) === -1) documentTypes.push(DocumentType.PURCHASE_ORDER);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        else documentTypes.push(...Object.values(DocumentType));
+
+        const businessID = req.businessID;
+
+        // push accounts according to type
+        const returnData = [];
+        if (documentTypes.includes(DocumentType.QUOTATION)) {
+            const Document = quotationCreator(`documents::${businessID}`);
+            const quotations = await Document.find({"documentType": DocumentType.QUOTATION}).select({
+                "_id": 0,
+                "__v": 0,
+            });
+            returnData.push(...quotations);
+        }
+
+        if (documentTypes.includes(DocumentType.INVOICE)) {
+            const Document = invoiceCreator(`documents::${businessID}`);
+            const invoices = await Document.find({"documentType": DocumentType.INVOICE}).select({
+                "_id": 0,
+                "__v": 0,
+            });
+            returnData.push(...invoices);
+        }
+
+        if (documentTypes.includes(DocumentType.RECEIPT)) {
+            const Document = receiptCreator(`documents::${businessID}`);
+            const receipts = await Document.find({"documentType": DocumentType.RECEIPT}).select({
+                "_id": 0,
+                "__v": 0,
+            });
+            returnData.push(...receipts);
+        }
+
+        if (documentTypes.includes(DocumentType.PURCHASE_ORDER)) {
+            const Document = purchaseOrderCreator(`documents::${businessID}`);
+            const purchaseOrders = await Document.find({"documentType": DocumentType.PURCHASE_ORDER}).select({
+                "_id": 0,
+                "__v": 0,
+            });
+            returnData.push(...purchaseOrders);
+        }
 
 
         res.status(200).json({
             "status": "success",
-            "message": "New document created"
+            "message": "Return list of documents sucessfully",
+            "content": returnData
         });
     }
     catch(err){
@@ -395,6 +464,24 @@ const listDocuments = async(req, res) =>{
     }
 };
 
+const proceedToNextDocState = async(req, res) =>{
+    try {
 
 
-module.exports = { createDocument }
+        res.status(200).json({
+            "status": "success",
+            "message": "New document created"
+        });
+    }
+    catch(err){
+        console.error("Unexpected error at document proceed state endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at document proceed state endpoint"
+        });
+    }
+};
+
+
+
+module.exports = { createDocument, listDocuments, getDocument }
