@@ -42,7 +42,16 @@ Example input:
         "pricePerUnit": 50,
         "totalCost": 825
     }]
-  }
+}
+
+    Optional input fields
+------------------------------------
+"quotationRef": String
+"invoiceRef": String
+------------------------------------
+
+if document is invoice -> new field "quotationRef": String
+if document is receipt -> new field "invoiceRef": String
 */
 router.post("/business/:businessName/document", verifyJWT, verifyRole, createDocument);
 
