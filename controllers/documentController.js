@@ -498,13 +498,121 @@ const listDocuments = async(req, res) =>{
     }
 };
 
+
 const proceedToNextDocState = async(req, res) =>{
     try {
+        if (
+            req.role !== BusinessRole.BUSINESS_ADMIN && 
+            req.role !== BusinessRole.ACCOUNTANT
+        ) return res.status(403).json({
+            "status": "error",
+            "message": "Unauthorized: User is not the admin nor an accountant"
+        });
+
+        const businessID = req.businessID;
+        const documentCode = req.params.documentCode;
+
+        const codePrefix = documentCode.slice(0, 2);
+        let Document;
+        let docType;
+        switch(codePrefix){
+            case documentCodePrefixs.quotation: 
+                Document = quotationCreator(`documents::${businessID}`);
+                docType = DocumentType.QUOTATION;
+                break;
+            case documentCodePrefixs.invoice:
+                Document = invoiceCreator(`documents::${businessID}`);
+                docType = DocumentType.INVOICE;
+                break;
+            case documentCodePrefixs.receipt:
+                Document = receiptCreator(`documents::${businessID}`);
+                docType = DocumentType.RECEIPT;
+                break;
+            case documentCodePrefixs.purchaseOrder:
+                Document = purchaseOrderCreator(`documents::${businessID}`);
+                docType = DocumentType.PURCHASE_ORDER;
+                break;
+            default:
+                return res.status(400).json({
+                    "status": "error",
+                    "message": "No document of this code found"
+                });
+        }
+
+        const foundDocument = await Document.findOne({"documentCode": documentCode});
+        const currentState = foundDocument.documentStatus;
+        const lineItems = foundDocument.lineItems;
+
+        if (currentState === DocumentStatus.DRAFT){
+            // nullify the expire field
+            foundDocument.draftExpireAt = null;
+            if (docType === DocumentType.PURCHASE_ORDER || docType === DocumentType.INVOICE){
+                foundDocument.documentStatus = DocumentStatus.WAIT_FOR_RESPONSE;
+            }
+            else {
+                foundDocument.documentStatus = DocumentStatus.COMPLETED;
+            }
+        }
+        else if (currentState === DocumentStatus.WAIT_FOR_RESPONSE){
+            const Item = itemCreator(`items::${businessID}`);
+
+            const itemIDs = lineItems.map(lineItem => lineItem.itemID);
+            const foundItems = await Item.find({"_id": { $in: itemIDs}}).select({
+                "_id": 1,
+                "quantityOnHand": 1
+            });
+
+
+            if (docType === DocumentType.PURCHASE_ORDER){
+                // do the purchase order logic
+                
+                // create expense transaction
+                // check if money is enough
+                
+                // add items
+                for (const curItem of foundItems){
+                    const curLineItem = foundDocument.lineItems.find(lineItem => lineItem.itemID.equals(curItem._id));
+                    curItem.quantityOnHand += curLineItem.quantity;
+                    await curItem.save();
+                }
+            }
+            else if (docType === DocumentType.INVOICE){
+                // do the invoice logic
+
+                // decrease items
+                // check if items are enough
+                
+
+                // error check
+                for (let i = 0; i < foundDocument.lineItems.length; i++){
+                    const curItem = foundItems.find(item => item._id.equals(itemIDs[i]));
+                    if (foundDocument.lineItems[i].quantity > curItem.quantityOnHand) {
+                        return res.status(409).json({
+                            "status": "error",
+                            "message": `${foundDocument.lineItems[i].name} have more quantity than available, please edit the document accordingly`
+                        });
+                    }
+                }
+
+                // save document
+                for (const curItem of foundItems){
+                    const curLineItem = foundDocument.lineItems.find(lineItem => lineItem.itemID.equals(curItem._id));
+                    curItem.quantityOnHand -= curLineItem.quantity;
+                    await curItem.save();
+                }
+
+                // create income transaction
+
+            }
+            foundDocument.documentStatus = DocumentStatus.COMPLETED;
+        }
+
+        await foundDocument.save();
 
 
         res.status(200).json({
             "status": "success",
-            "message": "New document created"
+            "message": "Document state changed to " + foundDocument.documentStatus
         });
     }
     catch(err){
@@ -517,5 +625,23 @@ const proceedToNextDocState = async(req, res) =>{
 };
 
 
+const updateDocument = async(req, res) =>{
+    try {
 
-module.exports = { createDocument, listDocuments, getDocument }
+
+        res.status(200).json({
+            "status": "success",
+            "message": "New document created"
+        });
+    }
+    catch(err){
+        console.error("Unexpected error at update document endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at update document endpoint"
+        });
+    }
+};
+
+
+module.exports = { createDocument, listDocuments, getDocument, proceedToNextDocState }

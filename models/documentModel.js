@@ -120,7 +120,8 @@ const documentBase = {
         type: Date
     },
     draftExpireAt: {
-        type: Date
+        type: Date,
+        index: { expires: 0 }
     }
 }
 

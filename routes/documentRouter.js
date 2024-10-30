@@ -5,7 +5,8 @@ const router = express.Router();
 const {
     createDocument,
     listDocuments,
-    getDocument
+    getDocument,
+    proceedToNextDocState
 } = require("../controllers/documentController");
 
 /* 
@@ -60,6 +61,8 @@ router.post("/business/:businessName/document", verifyJWT, verifyRole, createDoc
 router.get("/business/:businessName/documents", verifyJWT, verifyRole, listDocuments);
 
 router.get("/business/:businessName/document/:documentCode", verifyJWT, verifyRole, getDocument);
+
+router.put("/business/:businessName/document/:documentCode/change-status", verifyJWT, verifyRole, proceedToNextDocState);
 
 
 module.exports = router;
