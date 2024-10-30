@@ -6,7 +6,8 @@ const {
     createDocument,
     listDocuments,
     getDocument,
-    proceedToNextDocState
+    proceedToNextDocState,
+    updateDocument
 } = require("../controllers/documentController");
 
 /* 
@@ -62,7 +63,8 @@ router.get("/business/:businessName/documents", verifyJWT, verifyRole, listDocum
 
 router.get("/business/:businessName/document/:documentCode", verifyJWT, verifyRole, getDocument);
 
-router.put("/business/:businessName/document/:documentCode/change-status", verifyJWT, verifyRole, proceedToNextDocState);
+router.put("/business/:businessName/document/:documentCode", verifyJWT, verifyRole, updateDocument);
 
+router.put("/business/:businessName/document/:documentCode/change-status", verifyJWT, verifyRole, proceedToNextDocState);
 
 module.exports = router;

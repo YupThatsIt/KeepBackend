@@ -116,9 +116,6 @@ const documentBase = {
     createDate: {
         type: Date
     },
-    creationCompletedAt: {
-        type: Date
-    },
     draftExpireAt: {
         type: Date,
         index: { expires: 0 }

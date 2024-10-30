@@ -604,6 +604,8 @@ const proceedToNextDocState = async(req, res) =>{
                 // create income transaction
 
             }
+            const now = new Date();
+            foundDocument.responseReceivedAt = new Date(now.getTime());
             foundDocument.documentStatus = DocumentStatus.COMPLETED;
         }
 
@@ -625,13 +627,168 @@ const proceedToNextDocState = async(req, res) =>{
 };
 
 
-const updateDocument = async(req, res) =>{
+const updateDocument = async(req, res) => {
     try {
+        // check role, better this way for clarity
+        if (
+            req.role !== BusinessRole.BUSINESS_ADMIN && 
+            req.role !== BusinessRole.ACCOUNTANT
+        ) return res.status(403).json({
+            "status": "error",
+            "message": "Unauthorized: User is not the admin nor an accountant"
+        });
 
+        const businessID = req.businessID;
+        const documentCode = req.params.documentCode;
+
+        const codePrefix = documentCode.slice(0, 2);
+        let Document;
+        switch(codePrefix){
+            case documentCodePrefixs.quotation: 
+                Document = quotationCreator(`documents::${businessID}`);
+                docType = DocumentType.QUOTATION;
+                break;
+            case documentCodePrefixs.invoice:
+                Document = invoiceCreator(`documents::${businessID}`);
+                docType = DocumentType.INVOICE;
+                break;
+            case documentCodePrefixs.receipt:
+                Document = receiptCreator(`documents::${businessID}`);
+                docType = DocumentType.RECEIPT;
+                break;
+            case documentCodePrefixs.purchaseOrder:
+                Document = purchaseOrderCreator(`documents::${businessID}`);
+                docType = DocumentType.PURCHASE_ORDER;
+                break;
+            default:
+                return res.status(400).json({
+                    "status": "error",
+                    "message": "No document of this code found"
+                });
+        }
+
+        const foundDocument = await Document.findOne({"documentCode": documentCode});
+
+        if (foundDocument.documentStatus !== DocumentStatus.DRAFT) return res.status(403).json({
+            "status": "error",
+            "message": "The document is not in draft state: cannot edit"
+        });
+
+        // just name is fine
+        let {
+            remark,
+        } = req.body;
+        const {
+            createDate,
+            expireDate,
+            contactInfo,
+            lineItems
+        } = req.body;
+
+        if (
+            !createDate ||
+            !expireDate
+        ) return res.status(400).json({
+            "status": "error",
+            "message": "No document type, creation and expiration date"
+        });
+
+        // business and user only require the id which fortunately, already came with headers
+        // contact and line items will need to be input via user from front end
+        if (
+            !contactInfo.businessName ||
+            !contactInfo.name ||
+            !contactInfo.address ||
+            !contactInfo.taxID ||
+            !contactInfo.phone
+        ) return res.status(400).json({
+            "status": "error",
+            "message": "Contact"
+        });
+        contactInfo.email = (contactInfo.email) ? contactInfo.email : "-";
+        remark = (remark) ? remark : "-";
+
+        // check line item
+        if (lineItems.length === 0) return res.status(400).json({
+            "status": "error",
+            "message": "No line item"
+        });
+
+        // needed input from front end
+        if (
+            !lineItems[0].name ||
+            !lineItems[0].itemID ||
+            !lineItems[0].quantity ||
+            !lineItems[0].taxRate ||
+            !lineItems[0].totalCost ||
+            !lineItems[0].pricePerUnit
+        ) return res.status(400).json({
+            "status": "error",
+            "message": "Line items do not contain all necessary fields: itemID, quantity, taxRate are needed"
+        });
+
+
+        if (!haveSameFields(lineItems)) return res.status(400).json({
+            "status": "error",
+            "message": "Each Line items must contain same fields"
+        });
+
+        // contact info validation
+        if (!validatePhone(contactInfo.phone)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid phone number: must be number with length of 10"
+        });
+        if (!validateTaxID(contactInfo.taxID)) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid tax ID: must be number with length of 13"
+        });
+        
+        // check if expiration is greater than creation
+        const creationDate = new Date(createDate);
+        const expirationDate =new Date(expireDate);
+
+        if (expirationDate.getTime() < creationDate.getTime()) return res.status(400).json({
+            "status": "error",
+            "message": "Invalid expire date: it must not be greater than create date"
+        });
+
+        const now = new Date();
+        const draftExpireAt = new Date(now.getTime() + expireTime);
+
+        let totalCost = 0;
+        for (let i = 0; i < lineItems.length; i++){
+            totalCost += lineItems[i].totalCost;
+        }
+
+        // update
+        foundDocument.contactInfo = contactInfo;
+        foundDocument.lineItems = lineItems;
+        foundDocument.totalCost = totalCost;
+        foundDocument.draftExpireAt = draftExpireAt;
+        foundDocument.expireDate = expireDate;
+        foundDocument.createDate = createDate;
+        foundDocument.remark = remark;
+
+        if (foundDocument.documentType === DocumentType.INVOICE) {
+            let { quotationRef } = req.body;
+            quotationRef = (quotationRef) ? quotationRef : "-";
+            foundDocument.quotationRef = quotationRef;
+
+            const timeDiff = expirationDate.getTime() - creationDate.getTime();
+            const credit = timeDiff / (1000 * 60 * 60 * 24);
+            foundDocument.credit = credit;
+        }
+        else if (foundDocument.documentType === DocumentType.RECEIPT) {
+            let { invoiceRef } = req.body;
+            invoiceRef = (invoiceRef) ? invoiceRef : "-";
+            foundDocument.invoiceRef = invoiceRef;
+        }
+
+        await foundDocument.save();
 
         res.status(200).json({
             "status": "success",
-            "message": "New document created"
+            "message": "Document updated"
         });
     }
     catch(err){
@@ -644,4 +801,39 @@ const updateDocument = async(req, res) =>{
 };
 
 
-module.exports = { createDocument, listDocuments, getDocument, proceedToNextDocState }
+const deleteDocument = async (req, res) => {
+    try {
+        // check role, better this way for clarity
+        if (
+            req.role !== BusinessRole.BUSINESS_ADMIN && 
+            req.role !== BusinessRole.ACCOUNTANT
+        ) return res.status(403).json({
+            "status": "error",
+            "message": "Unauthorized: User is not the admin nor an accountant"
+        });
+
+        const businessID = req.businessID;
+        const documentCode = req.params.documentCode;
+
+        
+        res.status(200).json({
+            "status": "success",
+            "message": "Document updated"
+        });
+    }
+    catch(err){
+        console.error("Unexpected error at delete document endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at delete document endpoint"
+        });
+    }
+};
+
+module.exports = { 
+    createDocument, 
+    listDocuments,
+    getDocument,
+    proceedToNextDocState,
+    updateDocument
+}
