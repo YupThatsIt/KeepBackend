@@ -1,7 +1,7 @@
 // Business related models -> Done
 
 const mongoose = require('mongoose');
-const { DocumentStatus } = require("../enum");
+const { DocumentStatus, DocumentType } = require("../enum");
 
 const documentBase = {
     businessInfo: {
@@ -22,10 +22,6 @@ const documentBase = {
         }
     },
     authorInfo: {
-        accountID: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true
-        },
         name: {
             type: String
         },
@@ -37,10 +33,6 @@ const documentBase = {
         }
     },
     contactInfo: {
-        contactID: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true
-        },
         businessName: {
             type: String
         },
@@ -69,7 +61,7 @@ const documentBase = {
         unique: true
     },
     documentStatus: {
-        type: Number,
+        type: String,
         enum: [
             DocumentStatus.DRAFT,
             DocumentStatus.WAIT_FOR_RESPONSE,
@@ -77,19 +69,28 @@ const documentBase = {
         ],
         required: true
     },
+    documentType: {
+        type: String,
+        enum: [
+            DocumentType.QUOTATION,
+            DocumentType.INVOICE,
+            DocumentType.RECEIPT,
+            DocumentType.PURCHASE_ORDER
+        ],
+        required: true
+    },
     costBeforeTax: {
         type: Number,
-        required: true
     },
     totalTax: {
         type: Number,
-        required: true
     },
     totalCost: {
         type: Number,
         required: true
     },
     lineItems: [{
+        _id: false,
         itemID: {
             type: mongoose.Schema.Types.ObjectId
         },
@@ -109,7 +110,7 @@ const documentBase = {
             type: Number
         }
     }],
-    expiredDate: {
+    expireDate: {
         type: Date
     },
     createDate: {

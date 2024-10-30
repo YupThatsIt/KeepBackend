@@ -412,4 +412,22 @@ const deleteContact = async (req, res) => {
     }
 }
 
+
+const getContactByNamePrefix = async (req, res) => {
+    try {
+        // get specific contact model, there will be many according to business
+        res.status(200).json({
+            "status": "success",
+            "message": "Contact deleted",
+        });
+    }
+    catch(err){
+        console.error("Unexpected error at get contact by name's prefix endpoint :", err);
+        return res.status(500).json({
+            "status": "error",
+            "message": "Unexpected error at get contact by name's prefix endpoint"
+        });
+    }
+}
+
 module.exports = { createContact, getContacts, viewContact, updateContact, deleteContact};
