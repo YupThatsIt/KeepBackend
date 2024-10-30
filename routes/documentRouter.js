@@ -4,7 +4,8 @@ const verifyRole = require("../middlewares/checkBusinessRole");
 const router = express.Router();
 const {
     createDocument,
-    listDocuments
+    listDocuments,
+    getDocument
 } = require("../controllers/documentController");
 
 /* 
@@ -57,6 +58,8 @@ if document is receipt -> new field "invoiceRef": String
 router.post("/business/:businessName/document", verifyJWT, verifyRole, createDocument);
 
 router.get("/business/:businessName/documents", verifyJWT, verifyRole, listDocuments);
+
+router.get("/business/:businessName/document/:documentCode", verifyJWT, verifyRole, getDocument);
 
 
 module.exports = router;

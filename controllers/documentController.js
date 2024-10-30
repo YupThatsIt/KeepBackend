@@ -361,11 +361,45 @@ const createDocument = async(req, res) =>{
 
 const getDocument = async(req, res) =>{
     try {
+        const businessID = req.businessID;
+        const documentCode = req.params.documentCode;
 
+        const codePrefix = documentCode.slice(0, 2);
+        let Document;
+        switch(codePrefix){
+            case documentCodePrefixs.quotation: 
+                Document = quotationCreator(`documents::${businessID}`);
+                break;
+            case documentCodePrefixs.invoice:
+                Document = invoiceCreator(`documents::${businessID}`);
+                break;
+            case documentCodePrefixs.receipt:
+                Document = receiptCreator(`documents::${businessID}`);
+                break;
+            case documentCodePrefixs.purchaseOrder:
+                Document = purchaseOrderCreator(`documents::${businessID}`);
+                break;
+            default:
+                return res.status(400).json({
+                    "status": "error",
+                    "message": "No document of this code found"
+                });
+        }
+
+        const foundDocument = await Document.findOne({"documentCode": documentCode}).select({
+            "_id": 0
+        });
+        if (!foundDocument) return res.status(400).json({
+            "status": "error",
+            "message": "No document of this code found"
+        });
+
+        const returnData = foundDocument;
 
         res.status(200).json({
             "status": "success",
-            "message": "New document created"
+            "message": "New document created",
+            "content": returnData
         });
     }
     catch(err){
