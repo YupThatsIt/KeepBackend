@@ -11,10 +11,10 @@ function misingNumInSeq(source, min = 0, max = source.length - 1){
     }
 };
 
-const newMemberNumber = (seq) => {
+const newNumber = (seq) => {
     const result = misingNumInSeq(seq);
     if (result === Math.max(...seq)) return seq.length + 1;
     else return result;
 }
 
-module.exports = newMemberNumber;
+module.exports = { newNumber };

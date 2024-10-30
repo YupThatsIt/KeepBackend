@@ -3,7 +3,7 @@ const { User } = require("../models/userModel");
 const { BusinessRole } = require("../enum");
 const crypto = require("crypto");
 const mongoose = require("mongoose");
-const newMemberNumber = require("../utils/newMemberIdGenerator");
+const newNumber = require("../utils/newNumberGenerator");
 
 const generateJoinCode = async (req, res) => {
     try {
@@ -103,7 +103,7 @@ const joinBusiness = async (req, res) => {
             memberNumberArr.push(accountant.memberNumber);
         }
         memberNumberArr.sort();
-        const newMemberID = newMemberNumber(memberNumberArr);
+        const newMemberID = newNumber(memberNumberArr);
 
         // update user in business
         foundBusiness.accountants.push({

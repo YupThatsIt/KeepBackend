@@ -4,31 +4,66 @@ const mongoose = require('mongoose');
 const { DocumentStatus } = require("../enum");
 
 const documentBase = {
-    businessID: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true
-    },
-    accountID: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true
-    },
-    contactID: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true
-    },
     businessInfo: {
-        
+        name: {
+            type: String
+        },
+        address: {
+            type: String
+        },
+        taxID: {
+            type: String
+        },
+        logoUrl: {
+            type: String
+        },
+        phone: {
+            type: String
+        }
     },
     authorInfo: {
-
+        accountID: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true
+        },
+        name: {
+            type: String
+        },
+        phone: {
+            type: String
+        },
+        email: {
+            type: String
+        }
     },
     contactInfo: {
-
+        contactID: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true
+        },
+        businessName: {
+            type: String
+        },
+        name: {
+            type: String
+        },
+        address: {
+            type: String
+        },
+        taxID: {
+            type: String
+        },
+        phone: {
+            type: String
+        },
+        email: {
+            type: String
+        }
     },
     remark: {
-        
+        type: String
     },
-    documentNumber: {
+    documentCode: {
         type: String,
         required: true,
         unique: true
@@ -39,7 +74,6 @@ const documentBase = {
             DocumentStatus.DRAFT,
             DocumentStatus.WAIT_FOR_RESPONSE,
             DocumentStatus.COMPLETED,
-            DocumentStatus.EXPIRED
         ],
         required: true
     },
@@ -75,10 +109,16 @@ const documentBase = {
             type: Number
         }
     }],
-    expiredAt: {
+    expiredDate: {
+        type: Date
+    },
+    createDate: {
         type: Date
     },
     creationCompletedAt: {
+        type: Date
+    },
+    draftExpireAt: {
         type: Date
     }
 }

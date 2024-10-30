@@ -24,7 +24,7 @@ const itemSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    quantityForInvoice: {
+    quantityForInvoice: { // might need to delete
         type: Number,
         required: true
     },

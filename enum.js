@@ -26,13 +26,13 @@ const DocumentStatus = {
     EXPIRED: "หมดอายุ"
 };
 
-// const DocumentType = {
-//     QUOTATION: 1,
-//     INVOICE: 2,
-//     TAX_INVOICE: 3,
-//     RECEIPT: 4,
-//     PURCHASE_ORDER: 5
-// };
+const DocumentType = {
+    QUOTATION: "ใบเสนอราคา",
+    INVOICE: "ใบแจ้งหนี้",
+    TAX_INVOICE: "ใบกำกับภาษี",
+    RECEIPT: "ใบเสร็จรับเงิน",
+    PURCHASE_ORDER: "ใบสั่งซื้อ"
+};
 
 //////////////////
 // Item Related //
@@ -95,13 +95,14 @@ const BusinessType = {
 module.exports = { 
     NameTitle,
     BusinessRole,
+    BusinessType,
     DocumentStatus,
+    DocumentType,
     ItemType,
     TransactionStatus,
     TransactionType,
     BankAccountType,
     EwalletAccountType,
     FinancialChannelProviderType,
-    ContactType,
-    BusinessType
+    ContactType
 };
