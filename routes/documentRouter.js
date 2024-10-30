@@ -7,7 +7,8 @@ const {
     listDocuments,
     getDocument,
     proceedToNextDocState,
-    updateDocument
+    updateDocument,
+    deleteDocument
 } = require("../controllers/documentController");
 
 /* 
@@ -66,5 +67,7 @@ router.get("/business/:businessName/document/:documentCode", verifyJWT, verifyRo
 router.put("/business/:businessName/document/:documentCode", verifyJWT, verifyRole, updateDocument);
 
 router.put("/business/:businessName/document/:documentCode/change-status", verifyJWT, verifyRole, proceedToNextDocState);
+
+router.delete("/business/:businessName/document/:documentCode", verifyJWT, verifyRole, deleteDocument);
 
 module.exports = router;
